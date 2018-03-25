@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * @author aha-oretama
  */
 @Configuration
-public class SpellCheckerConfiguration {
+public class TypoCheckerConfiguration {
     @Bean
     public JLanguageTool jLanguageTool() {
         return new JLanguageTool(new AmericanEnglish());

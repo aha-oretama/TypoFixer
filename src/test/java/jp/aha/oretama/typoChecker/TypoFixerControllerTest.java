@@ -8,31 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.languagetool.AnalyzedSentence;
-import org.languagetool.rules.CommaWhitespaceRule;
-import org.languagetool.rules.DemoRule;
-import org.languagetool.rules.DoublePunctuationRule;
-import org.languagetool.rules.EmptyLineRule;
-import org.languagetool.rules.Example;
-import org.languagetool.rules.LongSentenceRule;
-import org.languagetool.rules.MultipleWhitespaceRule;
-import org.languagetool.rules.OpenNMTRule;
-import org.languagetool.rules.Rule;
-import org.languagetool.rules.RuleMatch;
-import org.languagetool.rules.SentenceWhitespaceRule;
-import org.languagetool.rules.UppercaseSentenceStartRule;
-import org.languagetool.rules.WhiteSpaceAtBeginOfParagraph;
-import org.languagetool.rules.WhiteSpaceBeforeParagraphEnd;
-import org.languagetool.rules.en.AvsAnRule;
-import org.languagetool.rules.en.CompoundRule;
-import org.languagetool.rules.en.ContractionSpellingRule;
-import org.languagetool.rules.en.EnglishDashRule;
-import org.languagetool.rules.en.EnglishUnpairedBracketsRule;
-import org.languagetool.rules.en.EnglishWordRepeatBeginningRule;
-import org.languagetool.rules.en.EnglishWordRepeatRule;
-import org.languagetool.rules.en.EnglishWrongWordInContextRule;
-import org.languagetool.rules.en.WordCoherencyRule;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -53,9 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author aha-oretama
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest(TypoFixController.class)
+@WebMvcTest(TypoFixerController.class)
 @Slf4j
-public class TypoFixControllerTest {
+public class TypoFixerControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -64,7 +39,7 @@ public class TypoFixControllerTest {
     private ObjectMapper mapper;
 
     @MockBean
-    private SpellCheckerService service;
+    private TypoCheckerService service;
 
     @MockBean
     private GitHubTemplate template;

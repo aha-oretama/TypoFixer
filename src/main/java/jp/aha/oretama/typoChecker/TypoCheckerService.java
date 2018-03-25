@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  */
 @Data
 @Service
-public class SpellCheckerService {
+public class TypoCheckerService {
 
     private final JLanguageTool jLanguageTool;
 

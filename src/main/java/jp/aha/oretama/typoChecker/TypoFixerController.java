@@ -23,9 +23,9 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
-public class TypoFixController {
+public class TypoFixerController {
 
-    private final SpellCheckerService service;
+    private final TypoCheckerService service;
     private final GitHubTemplate template;
     private static final String EVENT_TYPE ="pull_request";
     private static final List<String> ACTIONS = Arrays.asList("opened", "edited", "reopened");
