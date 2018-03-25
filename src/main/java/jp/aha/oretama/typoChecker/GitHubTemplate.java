@@ -3,6 +3,7 @@ package jp.aha.oretama.typoChecker;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jp.aha.oretama.typoChecker.model.Event;
+import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,7 +44,7 @@ public class GitHubTemplate {
     private static final long EXPIRATION_TIME = 30 * 1000; // 30 second.
     private static final long TIME_DELTA = 5 * 1000; // 5 second.
 
-    public Token getAuthToken(String installationId) throws IOException, GeneralSecurityException {
+    public Token getAuthToken(Event event) throws IOException, GeneralSecurityException {
         String jwt = getJwt();
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -50,22 +52,45 @@ public class GitHubTemplate {
 
         HttpEntity<String> requestEntity = new HttpEntity<>(httpHeaders);
 
-        ResponseEntity<Token> response = restTemplate.exchange(String.format("https://api.github.com/installations/%s/access_tokens", installationId), HttpMethod.POST, requestEntity, Token.class);
+        ResponseEntity<Token> response = restTemplate.exchange(String.format("https://api.github.com/installations/%s/access_tokens", event.getInstallation().getId()), HttpMethod.POST, requestEntity, Token.class);
         return response.getBody();
     }
 
-    public boolean postReplyComment(Event event, Token token) {
-        Map<String, Object> args = new HashMap<>();
-        args.put("body", "World!");
+    public boolean postComment(Event event, List<Suggestion> suggestions, Token token) {
 
-        RequestEntity requestEntity = RequestEntity.
-                post(URI.create(event.getIssue().getCommentsUrl()))
-                .header("Authorization", "token " + token.getToken())
-                .body(args);
+        String contentsUrl = event.getPullRequest().getReviewCommentsUrl();
+        boolean isAllCreated = true;
 
-        ResponseEntity<Object> exchange = restTemplate.exchange(requestEntity, Object.class);
+        for (Suggestion suggestion : suggestions) {
+            Map<String, String> body = new HashMap<>();
+            body.put("body", suggestion.getMatch().getMessage());
+            body.put("commit_id","" );
+            body.put("path", suggestion.getPath());
+            body.put("position", String.valueOf(suggestion.getLine()));
 
-        return exchange.getStatusCode() == HttpStatus.CREATED;
+            RequestEntity requestEntity = RequestEntity
+                    .post(URI.create(contentsUrl))
+                    .header("Authorization", "token " + token.getToken())
+                    .body(body);
+
+            ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+            if(responseEntity.getStatusCode() ==  HttpStatus.CREATED) {
+                isAllCreated = false;
+                log.warn(String.format("The request is failed, path:%s, position:%d.", suggestion.getPath(), suggestion.getLine()));
+            }
+        }
+
+        return isAllCreated;
+    }
+
+    public String getRawDiff(Event event, Token token) {
+        RequestEntity requestEntity = RequestEntity
+                .get(URI.create(event.getPullRequest().getDiffUrl()))
+                .header("Authorization", "token " + token.getToken()).build();
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        return responseEntity.getBody();
     }
 
     public String getInstallation() throws IOException, GeneralSecurityException {
