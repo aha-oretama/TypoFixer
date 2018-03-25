@@ -38,6 +38,8 @@ public class GitHubTemplate {
 
     @Value("${application.pem-file}")
     private String PEM_FILE;
+    @Value("${application.app-id}")
+    private String appId;
     private final RestTemplate restTemplate;
     private final ResourceLoader resourceLoader;
 
@@ -62,11 +64,11 @@ public class GitHubTemplate {
         boolean isAllCreated = true;
 
         for (Suggestion suggestion : suggestions) {
-            Map<String, String> body = new HashMap<>();
+            Map<String, Object> body = new HashMap<>();
             body.put("body", suggestion.getMatch().getMessage());
-            body.put("commit_id","" );
+            body.put("commit_id",event.getPullRequest().getHead().getSha() );
             body.put("path", suggestion.getPath());
-            body.put("position", String.valueOf(suggestion.getLine()));
+            body.put("position", suggestion.getLine());
 
             RequestEntity requestEntity = RequestEntity
                     .post(URI.create(contentsUrl))
@@ -109,7 +111,7 @@ public class GitHubTemplate {
     }
 
     private String getJwt() throws IOException, GeneralSecurityException {
-        String jwt = Jwts.builder().setIssuer("9674")
+        String jwt = Jwts.builder().setIssuer(appId)
                 .setIssuedAt(new Date(System.currentTimeMillis() - TIME_DELTA))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.RS256, getPrivateKey())
