@@ -7,6 +7,7 @@ import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.languagetool.rules.RuleMatch;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author aha-oretama
@@ -65,7 +67,15 @@ public class GitHubTemplate {
 
         for (Suggestion suggestion : suggestions) {
             Map<String, Object> body = new HashMap<>();
-            body.put("body", suggestion.getMatch().getMessage());
+            RuleMatch match = suggestion.getMatch();
+            StringBuilder message = new StringBuilder()
+                    .append("Potential error at characters ")
+                    .append(match.getFromPos() + "-" + match.getToPos() + ": ")
+                    .append(match.getMessage())
+                    .append("\n")
+                    .append("Suggested correction(s): ")
+                    .append(match.getSuggestedReplacements().stream().collect(Collectors.joining(",")));
+            body.put("body", message);
             body.put("commit_id",event.getPullRequest().getHead().getSha() );
             body.put("path", suggestion.getPath());
             body.put("position", suggestion.getLine());

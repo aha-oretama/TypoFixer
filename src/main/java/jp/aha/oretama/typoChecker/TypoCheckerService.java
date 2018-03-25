@@ -1,7 +1,6 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Diff;
-import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import lombok.Data;
 import org.languagetool.JLanguageTool;
