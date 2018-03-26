@@ -72,9 +72,14 @@ public class GitHubTemplate {
                     .append("Potential error at characters ")
                     .append(match.getFromPos() + "-" + match.getToPos() + ": ")
                     .append(match.getMessage())
-                    .append("\n")
-                    .append("Suggested correction(s): ")
-                    .append(match.getSuggestedReplacements().stream().collect(Collectors.joining(",")));
+                    .append("\n");
+            if (!match.getSuggestedReplacements().isEmpty()) {
+                message.append("Suggested correction(s): \n")
+                        .append(
+                                match.getSuggestedReplacements().stream()
+                                        .map(replace -> "- [ ] " + replace)
+                                        .collect(Collectors.joining("\n")));
+            }
             body.put("body", message);
             body.put("commit_id",event.getPullRequest().getHead().getSha() );
             body.put("path", suggestion.getPath());
