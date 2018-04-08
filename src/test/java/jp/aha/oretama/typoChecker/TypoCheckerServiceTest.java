@@ -42,7 +42,7 @@ public class TypoCheckerServiceTest {
         assertEquals("README.md", diff.getPath());
         // TODO: Is position from 0 or 1? Confirm GitHub api.
         diff.getAdded().forEach((integer, s) -> {
-                    assertEquals(1, integer.intValue());
+                    assertEquals(0, integer.intValue());
                     assertEquals("Nobody reads", s);
                 }
         );

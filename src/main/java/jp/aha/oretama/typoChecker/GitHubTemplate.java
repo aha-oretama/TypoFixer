@@ -67,21 +67,8 @@ public class GitHubTemplate {
 
         for (Suggestion suggestion : suggestions) {
             Map<String, Object> body = new HashMap<>();
-            RuleMatch match = suggestion.getMatch();
-            StringBuilder message = new StringBuilder()
-                    .append("Potential error at characters ")
-                    .append(match.getFromPos() + "-" + match.getToPos() + ": ")
-                    .append(match.getMessage())
-                    .append("\n");
-            if (!match.getSuggestedReplacements().isEmpty()) {
-                message.append("Suggested correction(s): \n")
-                        .append(
-                                match.getSuggestedReplacements().stream()
-                                        .map(replace -> "- [ ] " + replace)
-                                        .collect(Collectors.joining("\n")));
-            }
-            body.put("body", message);
-            body.put("commit_id",event.getPullRequest().getHead().getSha() );
+            body.put("body", suggestion.createMessage());
+            body.put("commit_id", event.getPullRequest().getHead().getSha());
             body.put("path", suggestion.getPath());
             body.put("position", suggestion.getLine());
 
@@ -99,6 +86,14 @@ public class GitHubTemplate {
 
         return isAllCreated;
     }
+
+    public boolean pushFromComment(Event event, Map<Boolean,String> modifications, Token token) {
+        // /repos/:owner/:repo/contents/:path
+//        Map<String, String> body = new HashMap<>();
+//        body.put("message", "TypoFixer fixed typo.");
+        return true;
+    }
+
 
     public String getRawDiff(Event event, Token token) {
         RequestEntity requestEntity = RequestEntity

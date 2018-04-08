@@ -39,7 +39,9 @@ public class TypoFixerControllerTest {
     private ObjectMapper mapper;
 
     @MockBean
-    private TypoCheckerService service;
+    private TypoCheckerService checkerService;
+    @MockBean
+    private TypoModifierService modifierService;
 
     @MockBean
     private GitHubTemplate template;
@@ -56,7 +58,7 @@ public class TypoFixerControllerTest {
 
         doReturn(token).when(template).getAuthToken(event);
         doReturn(rawDiff).when(template).getRawDiff(event, token);
-        doReturn(suggestions).when(service).getSuggestions(rawDiff);
+        doReturn(suggestions).when(checkerService).getSuggestions(rawDiff);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }
 
@@ -73,7 +75,7 @@ public class TypoFixerControllerTest {
     @Test
     public void typoCheckerNotAcceptNoHeader() throws Exception {
         Map<String, String> expected = new HashMap<>();
-        expected.put("message", "Event is not pull_request.");
+        expected.put("message", "Event is not from GitHub or not target event.");
 
         this.mvc.perform(post("/typo-fixer"))
                 .andExpect(status().isOk())
@@ -83,7 +85,7 @@ public class TypoFixerControllerTest {
     @Test
     public void typoCheckerNotAcceptExceptPullRequest() throws Exception {
         Map<String, String> expected = new HashMap<>();
-        expected.put("message", "Event is not pull_request.");
+        expected.put("message", "Event is not from GitHub or not target event.");
 
         this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event","issue_comment"))
                 .andExpect(status().isOk())
@@ -98,7 +100,7 @@ public class TypoFixerControllerTest {
         log.info(body);
 
         Map<String, String> expected = new HashMap<>();
-        expected.put("message", "This comment event is not a target.");
+        expected.put("message", "This event action is not a target.");
 
         // Act
         this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event","pull_request").content(body).contentType(MediaType.APPLICATION_JSON))

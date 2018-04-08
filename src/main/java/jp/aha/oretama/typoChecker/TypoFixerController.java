@@ -4,7 +4,6 @@ import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,10 +24,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TypoFixerController {
 
-    private final TypoCheckerService service;
+    private final TypoCheckerService checkerService;
+    private final TypoModifierService modifierService;
     private final GitHubTemplate template;
-    private static final String EVENT_TYPE ="pull_request";
-    private static final List<String> ACTIONS = Arrays.asList("opened", "edited", "reopened");
+
+    private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
+    private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
+    private static final List<String> PULL_REQUEST_ACTIONS = Arrays.asList("opened", "edited", "reopened");
+    private static final String COMMENT_ACTION = "edited";
 
     @GetMapping("ping")
     public Map<String ,String> ping() {
@@ -44,27 +47,42 @@ public class TypoFixerController {
     }
 
     @PostMapping(value = "typo-fixer")
-    public Map<String, String> helloWorld(@RequestHeader(value = "X-GitHub-Event", required = false) String eventType, @RequestBody(required = false) Event event) throws IOException, GeneralSecurityException {
+    public Map<String, String> helloWorld(@RequestHeader(value = "X-GitHub-Event", defaultValue = "") String eventType, @RequestBody(required = false) Event event) throws IOException, GeneralSecurityException {
         HashMap<String, String> response = new HashMap<>();
 
-        // Webhooks is sent from pull request.
-        if(StringUtils.isEmpty(eventType) || !eventType.equals(EVENT_TYPE)) {
-            response.put("message", "Event is not pull_request.");
-            return response;
+        Token token;
+        switch (eventType) {
+            case PULL_REQUEST_EVENT_TYPE:
+                // Filter target events.
+                if (!PULL_REQUEST_ACTIONS.contains(event.getAction())) {
+                    response.put("message", "This event action is not a target.");
+                    break;
+                }
+
+                token = template.getAuthToken(event);
+                String rawDiff = template.getRawDiff(event, token);
+                List<Suggestion> suggestions = checkerService.getSuggestions(rawDiff);
+                boolean isCreated =  template.postComment(event, suggestions, token);
+
+                response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
+                break;
+            case COMMENT_EVENT_TYPE:
+                if (!COMMENT_ACTION.equals(event.getAction())) {
+                    response.put("message", "This event action is not a target.");
+                    break;
+                }
+
+                token = template.getAuthToken(event);
+                Map<Boolean, String> modifications = modifierService.getModifications(event);
+                boolean isModified = template.pushFromComment(event, modifications, token);
+
+                response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is ailed.");
+                break;
+            default:
+                response.put("message", "Event is not from GitHub or not target event.");
+                break;
         }
 
-        // Filter target events.
-        if (!ACTIONS.contains(event.getAction())) {
-            response.put("message", "This comment event is not a target.");
-            return response;
-        }
-
-        Token token = template.getAuthToken(event);
-        String rawDiff = template.getRawDiff(event, token);
-        List<Suggestion> suggestions = service.getSuggestions(rawDiff);
-        boolean isCreated =  template.postComment(event, suggestions, token);
-
-        response.put("message", isCreated ? "Comment succeeded." : "Comment Failed.");
         return response;
     }
 
