@@ -1,10 +1,11 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Event;
+import jp.aha.oretama.typoChecker.model.Modification;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
@@ -35,27 +36,35 @@ public class TypoModifierServiceTest {
     @Test
     public void subtract() {
         // before
-        comment.setBody("Potential error at characters 19-26: Possible spelling mistake found\r\nSuggested correction(s): \r\n- [x] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
+        comment.setBody("Typo? \"println\" at 14 line.\r\n- [x] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
         // after
-        body.setFrom("Potential error at characters 19-26: Possible spelling mistake found\r\nSuggested correction(s): \r\n- [ ] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
+        body.setFrom("Typo? \"println\" at 14 line.\r\n- [ ] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
 
-        Map<Boolean, String> modifications = service.getModifications(event);
+        Optional<Modification> optModification = service.getModification(event);
 
-        assertEquals(1, modifications.size());
-        assertEquals("print",modifications.get(false));
+        assertTrue(optModification.isPresent());
+        Modification modification = optModification.get();
+        assertFalse(modification.isAdded());
+        assertEquals(14, modification.getLine());
+        assertEquals("println",modification.getTypo());
+        assertEquals("print",modification.getCorrect());
     }
 
     @Test
     public void added() {
         // before
-        comment.setBody("Potential error at characters 19-26: Possible spelling mistake found\r\nSuggested correction(s): \r\n- [ ] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
+        comment.setBody("Typo? \"println\" at 14 line.\r\n- [ ] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
         // after
-        body.setFrom("Potential error at characters 19-26: Possible spelling mistake found\r\nSuggested correction(s): \r\n- [x] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
+        body.setFrom("Typo? \"println\" at 14 line.\r\n- [x] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
 
-        Map<Boolean, String> modifications = service.getModifications(event);
+        Optional<Modification> optModification = service.getModification(event);
 
-        assertEquals(1, modifications.size());
-        assertEquals("print",modifications.get(true));
+        assertTrue(optModification.isPresent());
+        Modification modification = optModification.get();
+        assertTrue(modification.isAdded());
+        assertEquals(14, modification.getLine());
+        assertEquals("println",modification.getTypo());
+        assertEquals("print",modification.getCorrect());
     }
 
 }

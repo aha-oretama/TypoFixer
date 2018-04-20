@@ -3,11 +3,13 @@ package jp.aha.oretama.typoChecker;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jp.aha.oretama.typoChecker.model.Event;
+import jp.aha.oretama.typoChecker.model.Modification;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.languagetool.rules.RuleMatch;
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -21,9 +23,11 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -87,11 +91,56 @@ public class GitHubTemplate {
         return isAllCreated;
     }
 
-    public boolean pushFromComment(Event event, Map<Boolean,String> modifications, Token token) {
-        // /repos/:owner/:repo/contents/:path
-//        Map<String, String> body = new HashMap<>();
-//        body.put("message", "TypoFixer fixed typo.");
-        return true;
+    public boolean pushFromComment(Event event, Modification modification, Token token) throws IOException {
+        Event.Head head = event.getPullRequest().getHead();
+        String contentsUrl = head.getRepo().getContentsUrl();
+        contentsUrl = contentsUrl.replace("{+path}", event.getComment().getPath());
+        String ref = head.getRef();
+        String sha = head.getSha();
+
+        String encoded = getContent(token, contentsUrl, ref);
+        String content = new String(Base64.getDecoder().decode(encoded));
+
+        List<String> lines = IOUtils.readLines(new StringReader(content));
+        String older = lines.get(modification.getLine() - 1);
+        String newer = older.replace(modification.getTypo(), modification.getCorrect());
+
+        // There are no replacement
+        if(!older.equals(newer)) {
+            return false;
+        }
+
+        lines.set(modification.getLine() - 1, newer);
+        String newContent = lines.stream().collect(Collectors.joining("\n"));
+        String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes());
+
+        return pushContent(token, modification, newEncoded, contentsUrl, sha, ref);
+    }
+
+    @NotNull
+    private String getContent(Token token, String contentsUrl, String ref) {
+        RequestEntity requestEntity = RequestEntity
+                .get(URI.create(contentsUrl + "?ref=" + ref))
+                .header("Authorization", "token " + token.getToken()).build();
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        return responseEntity.getBody();
+    }
+
+    private boolean pushContent(Token token, Modification modification, String content, String contentsUrl, String sha, String ref) {
+        Map<String, String> body = new HashMap<>();
+        body.put("message", String.format("TypoFixer have fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine()));
+        body.put("content", content);
+        body.put("sha", sha);
+        body.put("branch", sha);
+
+        RequestEntity requestEntity = RequestEntity
+                .put(URI.create(contentsUrl))
+                .header("Authorization", "token " + token.getToken())
+                .body(body);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        return responseEntity.getStatusCode() == HttpStatus.OK;
     }
 
 

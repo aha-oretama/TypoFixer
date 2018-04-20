@@ -1,6 +1,7 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Event;
+import jp.aha.oretama.typoChecker.model.Modification;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author aha-oretama
@@ -73,10 +75,13 @@ public class TypoFixerController {
                 }
 
                 token = template.getAuthToken(event);
-                Map<Boolean, String> modifications = modifierService.getModifications(event);
-                boolean isModified = template.pushFromComment(event, modifications, token);
-
-                response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is ailed.");
+                Optional<Modification> modification = modifierService.getModification(event);
+                if(modification.isPresent()) {
+                    boolean isModified = template.pushFromComment(event, modification.get(), token);
+                    response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
+                }else {
+                    response.put("message", "Not target format.");
+                }
                 break;
             default:
                 response.put("message", "Event is not from GitHub or not target event.");

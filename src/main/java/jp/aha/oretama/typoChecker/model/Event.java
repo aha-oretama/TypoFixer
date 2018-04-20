@@ -80,5 +80,6 @@ public class Event {
     @Data
     public static class Comment {
         private String body;
+        private String path;
     }
 }
