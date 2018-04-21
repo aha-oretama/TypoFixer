@@ -15,12 +15,11 @@ public class RestTemplateConfiguration {
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        HeaderRequestInterceptor headerRequestInterceptor = new HeaderRequestInterceptor("Accept", "application/vnd.github.machine-man-preview+json");
         LoggingRequestInterceptor loggingRequestInterceptor = new LoggingRequestInterceptor();
 
         return builder
                 .requestFactory(() -> new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()))
-                .interceptors(headerRequestInterceptor, loggingRequestInterceptor)
+                .interceptors(loggingRequestInterceptor)
                 .build();
     }
 }

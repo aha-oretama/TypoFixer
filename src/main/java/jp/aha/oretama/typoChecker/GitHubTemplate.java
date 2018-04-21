@@ -2,6 +2,7 @@ package jp.aha.oretama.typoChecker;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jp.aha.oretama.typoChecker.configuration.HeaderRequestInterceptor;
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Modification;
 import jp.aha.oretama.typoChecker.model.Suggestion;
@@ -25,6 +26,8 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.Base64;
@@ -57,6 +60,7 @@ public class GitHubTemplate {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization","Bearer " + jwt);
+        httpHeaders.add("Accept", "application/vnd.github.machine-man-preview+json");
 
         HttpEntity<String> requestEntity = new HttpEntity<>(httpHeaders);
 
@@ -79,6 +83,7 @@ public class GitHubTemplate {
             RequestEntity requestEntity = RequestEntity
                     .post(URI.create(contentsUrl))
                     .header("Authorization", "token " + token.getToken())
+                    .header("Accept", "application/vnd.github.machine-man-preview+json")
                     .body(body);
 
             ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
@@ -98,21 +103,20 @@ public class GitHubTemplate {
         String ref = head.getRef();
         String sha = head.getSha();
 
-        String encoded = getContent(token, contentsUrl, ref);
-        String content = new String(Base64.getDecoder().decode(encoded));
+        String content = getContent(token, contentsUrl, ref);
 
         List<String> lines = IOUtils.readLines(new StringReader(content));
         String older = lines.get(modification.getLine() - 1);
         String newer = older.replace(modification.getTypo(), modification.getCorrect());
 
         // There are no replacement
-        if(!older.equals(newer)) {
+        if(older.equals(newer)) {
             return false;
         }
 
         lines.set(modification.getLine() - 1, newer);
         String newContent = lines.stream().collect(Collectors.joining("\n"));
-        String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes());
+        String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes(StandardCharsets.UTF_8));
 
         return pushContent(token, modification, newEncoded, contentsUrl, sha, ref);
     }
@@ -121,7 +125,8 @@ public class GitHubTemplate {
     private String getContent(Token token, String contentsUrl, String ref) {
         RequestEntity requestEntity = RequestEntity
                 .get(URI.create(contentsUrl + "?ref=" + ref))
-                .header("Authorization", "token " + token.getToken()).build();
+                .header("Authorization", "token " + token.getToken())
+                .header("Accept","application/vnd.github.VERSION.raw").build();
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         return responseEntity.getBody();
@@ -137,6 +142,7 @@ public class GitHubTemplate {
         RequestEntity requestEntity = RequestEntity
                 .put(URI.create(contentsUrl))
                 .header("Authorization", "token " + token.getToken())
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
                 .body(body);
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
@@ -147,7 +153,9 @@ public class GitHubTemplate {
     public String getRawDiff(Event event, Token token) {
         RequestEntity requestEntity = RequestEntity
                 .get(URI.create(event.getPullRequest().getDiffUrl()))
-                .header("Authorization", "token " + token.getToken()).build();
+                .header("Authorization", "token " + token.getToken())
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .build();
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 
@@ -157,6 +165,7 @@ public class GitHubTemplate {
     public String getInstallation() throws IOException, GeneralSecurityException {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization","Bearer " + getJwt());
+        httpHeaders.add("Accept", "application/vnd.github.machine-man-preview+json");
 
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
 
