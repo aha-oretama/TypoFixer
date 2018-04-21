@@ -2,7 +2,6 @@ package jp.aha.oretama.typoChecker;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import jp.aha.oretama.typoChecker.configuration.HeaderRequestInterceptor;
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Modification;
 import jp.aha.oretama.typoChecker.model.Suggestion;
@@ -26,7 +25,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -101,11 +99,10 @@ public class GitHubTemplate {
         String contentsUrl = head.getRepo().getContentsUrl();
         contentsUrl = contentsUrl.replace("{+path}", event.getComment().getPath());
         String ref = head.getRef();
-        String sha = head.getSha();
 
-        String content = getContent(token, contentsUrl, ref);
+        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
 
-        List<String> lines = IOUtils.readLines(new StringReader(content));
+        List<String> lines = IOUtils.readLines(new StringReader(map.get("content")));
         String older = lines.get(modification.getLine() - 1);
         String newer = older.replace(modification.getTypo(), modification.getCorrect());
 
@@ -118,18 +115,22 @@ public class GitHubTemplate {
         String newContent = lines.stream().collect(Collectors.joining("\n"));
         String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes(StandardCharsets.UTF_8));
 
-        return pushContent(token, modification, newEncoded, contentsUrl, sha, ref);
+        return pushContent(token, modification, newEncoded, contentsUrl, map.get("sha"), ref);
     }
 
     @NotNull
-    private String getContent(Token token, String contentsUrl, String ref) {
+    private Map<String,String> getShaAndContent(Token token, String contentsUrl, String ref) {
         RequestEntity requestEntity = RequestEntity
                 .get(URI.create(contentsUrl + "?ref=" + ref))
                 .header("Authorization", "token " + token.getToken())
                 .header("Accept","application/vnd.github.VERSION.raw").build();
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-        return responseEntity.getBody();
+
+        HashMap<String, String> map = new HashMap<>();
+        map.put("sha", responseEntity.getHeaders().getETag().replace("\"","")); // Etag starts and ends with ". Remove ".
+        map.put("content", responseEntity.getBody());
+        return map;
     }
 
     private boolean pushContent(Token token, Modification modification, String content, String contentsUrl, String sha, String ref) {
@@ -137,7 +138,7 @@ public class GitHubTemplate {
         body.put("message", String.format("TypoFixer have fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine()));
         body.put("content", content);
         body.put("sha", sha);
-        body.put("branch", sha);
+        body.put("branch", ref);
 
         RequestEntity requestEntity = RequestEntity
                 .put(URI.create(contentsUrl))
