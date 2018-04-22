@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>jp.aha-oretama</groupId>
-	<artifactId>typoChecker</artifactId>
+	<artifactId>TypoChecker</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>typoChecker</name>
+	<name>TypoChecker</name>
 	<description>Fix typo automatically.</description>
 
 	<parent>
