@@ -174,6 +174,18 @@ public class GitHubTemplate {
         return exchange.getBody();
     }
 
+    public List<String> getProjectDictionary(Event event, Token token) throws IOException {
+        Event.Head head = event.getPullRequest().getHead();
+        String contentsUrl = head.getRepo().getContentsUrl();
+        contentsUrl = contentsUrl.replace("{+path}", "typofixer.dic");
+        String ref = head.getRef();
+
+        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
+        String content = map.get("content");
+
+        return IOUtils.readLines(new StringReader(content));
+    }
+
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
         Resource resource = resourceLoader.getResource("classpath:" + PEM_FILE);
         return EncryptionUtil.getPrivateKey(resource.getInputStream());
@@ -188,4 +200,5 @@ public class GitHubTemplate {
         log.info(jwt);
         return jwt;
     }
+
 }

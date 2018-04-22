@@ -6,7 +6,9 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.spelling.SpellingCheckRule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +21,9 @@ import java.util.stream.Collectors;
  */
 @Configuration
 public class TypoCheckerConfiguration {
+
     @Bean
+    @RequestScope
     public JLanguageTool jLanguageTool() {
         JLanguageTool jLanguageTool = new JLanguageTool(new AmericanEnglish());
         // Make all rules disable except SpellingCheckRule.

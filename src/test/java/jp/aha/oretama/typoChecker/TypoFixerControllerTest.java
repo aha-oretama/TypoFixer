@@ -55,10 +55,11 @@ public class TypoFixerControllerTest {
     public void setUp() throws Exception {
         token = new Token();
         suggestions.add(new Suggestion("src/main/java/test.java",99, null));
+        List<String> dictionary = new ArrayList<>();
 
         doReturn(token).when(template).getAuthToken(event);
         doReturn(rawDiff).when(template).getRawDiff(event, token);
-        doReturn(suggestions).when(checkerService).getSuggestions(rawDiff);
+        doReturn(suggestions).when(checkerService).getSuggestions(rawDiff, dictionary);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }
 

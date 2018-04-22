@@ -4,7 +4,9 @@ import jp.aha.oretama.typoChecker.model.Diff;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import lombok.Data;
 import org.languagetool.JLanguageTool;
+import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
+import org.languagetool.rules.spelling.SpellingCheckRule;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -28,9 +30,18 @@ public class TypoCheckerService {
     private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
     private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,[0-9]+ \\+([0-9]+),[0-9]+ @@");
 
-    public List<Suggestion> getSuggestions(String rawDiff) throws IOException {
+    public List<Suggestion> getSuggestions(String rawDiff, List<String> dictionary) throws IOException {
         List<Diff> added = getAdded(rawDiff);
+        setDictionary(dictionary);
         return spellCheck(added);
+    }
+
+    private void setDictionary(List<String> dictionary) {
+        for (Rule rule : jLanguageTool.getAllActiveRules()) {
+            if(rule instanceof SpellingCheckRule) {
+                ((SpellingCheckRule)rule).acceptPhrases(dictionary);
+            }
+        }
     }
 
     private List<Suggestion> spellCheck(final List<Diff> added) throws IOException {

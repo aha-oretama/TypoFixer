@@ -32,7 +32,7 @@ public class TypoFixerController {
 
     private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
     private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
-    private static final List<String> PULL_REQUEST_ACTIONS = Arrays.asList("opened", "edited", "reopened");
+    private static final List<String> PULL_REQUEST_ACTIONS = Arrays.asList("opened", "edited", "reopened", "synchronize");
     private static final String COMMENT_ACTION = "edited";
 
     @GetMapping("ping")
@@ -49,7 +49,7 @@ public class TypoFixerController {
     }
 
     @PostMapping(value = "typo-fixer")
-    public Map<String, String> helloWorld(@RequestHeader(value = "X-GitHub-Event", defaultValue = "") String eventType, @RequestBody(required = false) Event event) throws IOException, GeneralSecurityException {
+    public Map<String, String> typoFixer(@RequestHeader(value = "X-GitHub-Event", defaultValue = "") String eventType, @RequestBody(required = false) Event event) throws IOException, GeneralSecurityException {
         HashMap<String, String> response = new HashMap<>();
 
         Token token;
@@ -63,7 +63,8 @@ public class TypoFixerController {
 
                 token = template.getAuthToken(event);
                 String rawDiff = template.getRawDiff(event, token);
-                List<Suggestion> suggestions = checkerService.getSuggestions(rawDiff);
+                List<String> dictionary = template.getProjectDictionary(event, token);
+                List<Suggestion> suggestions = checkerService.getSuggestions(rawDiff,dictionary);
                 boolean isCreated =  template.postComment(event, suggestions, token);
 
                 response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
