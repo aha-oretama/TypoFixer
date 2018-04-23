@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -95,16 +97,56 @@ public class GitHubTemplate {
     }
 
     public boolean pushFromComment(Event event, Modification modification, Token token) throws IOException {
+        if (modification.getCorrect().equals(Suggestion.REGISTER_DICTIONARY)) {
+            return pushDictionary(event, modification, token);
+        }
+
+        return pushReplacement(event, modification, token);
+    }
+
+    private boolean pushDictionary(Event event, Modification modification, Token token) throws IOException {
         Event.Head head = event.getPullRequest().getHead();
-        String contentsUrl = head.getRepo().getContentsUrl();
-        contentsUrl = contentsUrl.replace("{+path}", event.getComment().getPath());
+        String contentUrl = head.getRepo().getContentsUrl().replace("{+path}", "typofixer.dic");
         String ref = head.getRef();
 
-        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
+        String content;
+        Optional<String> sha = Optional.empty();
+        try {
+            Map<String, String> map = getShaAndContent(token, contentUrl, ref);
+            content = map.get("content");
+            if(modification.isAdded()) {
+                content += "\n" + modification.getTypo();
+            }else {
+                List<String> lines = IOUtils.readLines(new StringReader(content));
+                lines.removeIf(s -> s.equals(modification.getTypo()));
+                content = lines.stream().collect(Collectors.joining("\n"));
+            }
+            sha = Optional.of(map.get("sha"));
+        }catch (final HttpClientErrorException e) {
+            if(e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                throw e;
+            }
+            content = modification.getTypo();
+        }
+        String message = String.format("TypoFixer has registered word \"%s\" in \"typofixer.dic\" dictionary.", modification.getCorrect());
+
+        return pushContent(token, contentUrl, content, message, sha, ref);
+    }
+
+    private boolean pushReplacement(Event event, Modification modification, Token token) throws IOException {
+        Event.Head head = event.getPullRequest().getHead();
+        String contentUrl = head.getRepo().getContentsUrl();
+        contentUrl = contentUrl.replace("{+path}", event.getComment().getPath());
+        String ref = head.getRef();
+
+        Map<String, String> map = getShaAndContent(token, contentUrl, ref);
 
         List<String> lines = IOUtils.readLines(new StringReader(map.get("content")));
         String older = lines.get(modification.getLine() - 1);
-        String newer = older.replace(modification.getTypo(), modification.getCorrect());
+        // That modification is not added means to revert the word from correct to typo.
+        String newer = modification.isAdded() ?
+                older.replace(modification.getTypo(), modification.getCorrect()) :
+                older.replace(modification.getCorrect(), modification.getTypo());
 
         // There are no replacement
         if(older.equals(newer)) {
@@ -114,14 +156,14 @@ public class GitHubTemplate {
         lines.set(modification.getLine() - 1, newer);
         String newContent = lines.stream().collect(Collectors.joining("\n"));
         String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes(StandardCharsets.UTF_8));
-
-        return pushContent(token, modification, newEncoded, contentsUrl, map.get("sha"), ref);
+        String message = String.format("TypoFixer has fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine());
+        return pushContent(token, contentUrl, newEncoded, message, Optional.of(map.get("sha")), ref);
     }
 
     @NotNull
-    private Map<String,String> getShaAndContent(Token token, String contentsUrl, String ref) {
+    private Map<String,String> getShaAndContent(Token token, String contentUrl, String ref) {
         RequestEntity requestEntity = RequestEntity
-                .get(URI.create(contentsUrl + "?ref=" + ref))
+                .get(URI.create(contentUrl + "?ref=" + ref))
                 .header("Authorization", "token " + token.getToken())
                 .header("Accept","application/vnd.github.VERSION.raw").build();
 
@@ -133,11 +175,11 @@ public class GitHubTemplate {
         return map;
     }
 
-    private boolean pushContent(Token token, Modification modification, String content, String contentsUrl, String sha, String ref) {
+    private boolean pushContent(Token token, String contentsUrl, String content, String message, Optional<String> sha, String ref) {
         Map<String, String> body = new HashMap<>();
-        body.put("message", String.format("TypoFixer have fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine()));
+        body.put("message", message);
         body.put("content", content);
-        body.put("sha", sha);
+        sha.ifPresent(s -> body.put("sha", s));
         body.put("branch", ref);
 
         RequestEntity requestEntity = RequestEntity
