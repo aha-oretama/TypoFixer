@@ -115,7 +115,10 @@ public class GitHubTemplate {
             Map<String, String> map = getShaAndContent(token, contentUrl, ref);
             content = map.get("content");
             if(modification.isAdded()) {
-                content += "\n" + modification.getTypo();
+                if (!content.endsWith("\n")) {
+                    content += "\n";
+                }
+                content += modification.getTypo();
             }else {
                 List<String> lines = IOUtils.readLines(new StringReader(content));
                 lines.removeIf(s -> s.equals(modification.getTypo()));
@@ -128,9 +131,12 @@ public class GitHubTemplate {
             }
             content = modification.getTypo();
         }
-        String message = String.format("TypoFixer has registered word \"%s\" in \"typofixer.dic\" dictionary.", modification.getCorrect());
+        String encoded = Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
+        String message = modification.isAdded() ?
+                String.format("TypoFixer has registered word \"%s\" in \"typofixer.dic\" dictionary.", modification.getTypo()) :
+                String.format("TypoFixer has removed word \"%s\" in \"typofixer.dic\" dictionary.", modification.getTypo());
 
-        return pushContent(token, contentUrl, content, message, sha, ref);
+        return pushContent(token, contentUrl, encoded, message, sha, ref);
     }
 
     private boolean pushReplacement(Event event, Modification modification, Token token) throws IOException {
@@ -177,10 +183,10 @@ public class GitHubTemplate {
         return map;
     }
 
-    private boolean pushContent(Token token, String contentsUrl, String content, String message, Optional<String> sha, String ref) {
+    private boolean pushContent(Token token, String contentsUrl, String encoded, String message, Optional<String> sha, String ref) {
         Map<String, String> body = new HashMap<>();
         body.put("message", message);
-        body.put("content", content);
+        body.put("content", encoded);
         sha.ifPresent(s -> body.put("sha", s));
         body.put("branch", ref);
 
@@ -191,7 +197,7 @@ public class GitHubTemplate {
                 .body(body);
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-        return responseEntity.getStatusCode() == HttpStatus.OK;
+        return responseEntity.getStatusCode() == HttpStatus.OK || responseEntity.getStatusCode() == HttpStatus.CREATED;
     }
 
 
