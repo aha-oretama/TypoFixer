@@ -13,7 +13,7 @@ public class Suggestion {
     private final String path;
     private final Integer line;
     private final RuleMatch match;
-    public static final String REGISTER_DICTIONARY = "not typo, register in dictionary and never point out";
+    public static final String REGISTER_DICTIONARY = "Not typo, register in dictionary and never point out.";
 
     public String createMessage() {
         String typo = match.getSentence().getText().substring(match.getFromPos(), match.getToPos());
