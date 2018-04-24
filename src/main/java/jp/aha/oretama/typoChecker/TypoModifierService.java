@@ -24,8 +24,8 @@ public class TypoModifierService {
     private static final Pattern TYPO_LINE_PATTERN = Pattern.compile("Typo\\? \"(.+)\" at (\\d+) line\\.", Pattern.MULTILINE);
 
     public Optional<Modification> getModification(Event event) {
-        String after = event.getChanges().getBody().getFrom();
-        String before = event.getComment().getBody();
+        String before = event.getChanges().getBody().getFrom();
+        String after = event.getComment().getBody();
 
         List<String> typoAndLine = getTypoAndLine(after);
         // Not the target comment
