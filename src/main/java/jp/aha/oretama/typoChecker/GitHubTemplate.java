@@ -145,8 +145,8 @@ public class GitHubTemplate {
         String older = lines.get(modification.getLine() - 1);
         // That modification is not added means to revert the word from correct to typo.
         String newer = modification.isAdded() ?
-                older.replace(modification.getTypo(), modification.getCorrect()) :
-                older.replace(modification.getCorrect(), modification.getTypo());
+                older.replaceAll(modification.getTypo(), modification.getCorrect()) :
+                older.replaceAll(modification.getCorrect(), modification.getTypo());
 
         // There are no replacement
         if(older.equals(newer)) {
@@ -156,7 +156,9 @@ public class GitHubTemplate {
         lines.set(modification.getLine() - 1, newer);
         String newContent = lines.stream().collect(Collectors.joining("\n"));
         String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes(StandardCharsets.UTF_8));
-        String message = String.format("TypoFixer has fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine());
+        String message = modification.isAdded() ?
+                String.format("TypoFixer has fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine()) :
+                String.format("TypoFixer has reverted typo from \"%s\" to \"%s\" at %d line.", modification.getCorrect(), modification.getTypo(), modification.getLine());
         return pushContent(token, contentUrl, newEncoded, message, Optional.of(map.get("sha")), ref);
     }
 
