@@ -1,5 +1,6 @@
 package jp.aha.oretama.typoChecker.configuration;
 
+import jp.aha.oretama.typoChecker.language.CodingEnglish;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.rules.Rule;
@@ -25,7 +26,7 @@ public class TypoCheckerConfiguration {
     @Bean
     @RequestScope
     public JLanguageTool jLanguageTool() {
-        JLanguageTool jLanguageTool = new JLanguageTool(new AmericanEnglish());
+        JLanguageTool jLanguageTool = new JLanguageTool(new CodingEnglish());
         // Make all rules disable except SpellingCheckRule.
         List<Rule> allActiveRules = jLanguageTool.getAllActiveRules();
         List<String> ruleIds = allActiveRules.stream().filter(rule -> !(rule instanceof SpellingCheckRule)).map(Rule::getId).collect(Collectors.toList());
