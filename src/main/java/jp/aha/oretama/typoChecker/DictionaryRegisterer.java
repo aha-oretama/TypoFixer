@@ -1,6 +1,6 @@
 package jp.aha.oretama.typoChecker;
 
-import jp.aha.oretama.typoChecker.configuration.CacheConfiguration;
+import jp.aha.oretama.typoChecker.configuration.property.CacheProperty;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.springframework.cache.Cache;
@@ -26,6 +26,7 @@ public class DictionaryRegisterer {
 
     private final RestTemplate restTemplate;
     private final CacheManager cacheManager;
+    private final CacheProperty cacheProperty;
 
     public synchronized void registDictionary() throws IOException {
 
@@ -34,8 +35,8 @@ public class DictionaryRegisterer {
         String body = responseEntity.getBody();
 
         List<String> dictionaries = IOUtils.readLines(new StringReader(body));
-        Cache cache = cacheManager.getCache(CacheConfiguration.CACHE_KEY);
-        cache.evict(CacheConfiguration.DICTIONARY_CACHE_KEY);
-        cache.put(CacheConfiguration.DICTIONARY_CACHE_KEY, dictionaries);
+        Cache cache = cacheManager.getCache(cacheProperty.getName());
+        cache.evict(cacheProperty.getKey());
+        cache.put(cacheProperty.getKey(), dictionaries);
     }
 }

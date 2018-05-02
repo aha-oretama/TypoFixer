@@ -1,5 +1,6 @@
 package jp.aha.oretama.typoChecker.configuration;
 
+import jp.aha.oretama.typoChecker.configuration.property.CacheProperty;
 import jp.aha.oretama.typoChecker.language.CodingEnglish;
 import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
@@ -21,7 +22,7 @@ public class TypoCheckerConfiguration {
 
     @Bean
     @RequestScope
-    public JLanguageTool jLanguageTool(CacheManager cacheManager) {
+    public JLanguageTool jLanguageTool(CacheManager cacheManager, CacheProperty cacheProperty) {
         JLanguageTool jLanguageTool = new JLanguageTool(new CodingEnglish());
         // Make all rules disable except SpellingCheckRule.
         List<Rule> allActiveRules = jLanguageTool.getAllActiveRules();
@@ -29,8 +30,8 @@ public class TypoCheckerConfiguration {
         jLanguageTool.disableRules(ruleIds);
 
         // Set accept phrase
-        Cache cache = cacheManager.getCache(CacheConfiguration.CACHE_KEY);
-        List<String> dictionary = (List<String>)cache.get(CacheConfiguration.DICTIONARY_CACHE_KEY, List.class);
+        Cache cache = cacheManager.getCache(cacheProperty.getName());
+        List<String> dictionary = (List<String>)cache.get(cacheProperty.getKey(), List.class);
         for (Rule rule : jLanguageTool.getAllActiveRules()) {
             if (rule instanceof SpellingCheckRule) {
                 ((SpellingCheckRule) rule).acceptPhrases(dictionary);
