@@ -34,7 +34,7 @@ public class TypoModifierServiceTest {
     }
 
     @Test
-    public void subtract() {
+    public void added() {
         // before
         comment.setBody("Typo? \"println\" at 14 line.\r\n- [x] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
         // after
@@ -44,14 +44,14 @@ public class TypoModifierServiceTest {
 
         assertTrue(optModification.isPresent());
         Modification modification = optModification.get();
-        assertFalse(modification.isAdded());
+        assertTrue(modification.isAdded());
         assertEquals(14, modification.getLine());
         assertEquals("println",modification.getTypo());
         assertEquals("print",modification.getCorrect());
     }
 
     @Test
-    public void added() {
+    public void subtracted() {
         // before
         comment.setBody("Typo? \"println\" at 14 line.\r\n- [ ] print\r\n- [ ] printed\r\n- [ ] printing\r\n- [ ] prints\r\n- [ ] printer");
         // after
@@ -61,7 +61,7 @@ public class TypoModifierServiceTest {
 
         assertTrue(optModification.isPresent());
         Modification modification = optModification.get();
-        assertTrue(modification.isAdded());
+        assertFalse(modification.isAdded());
         assertEquals(14, modification.getLine());
         assertEquals("println",modification.getTypo());
         assertEquals("print",modification.getCorrect());
