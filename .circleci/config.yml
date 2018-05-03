@@ -14,7 +14,7 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
 
-    working_directory: ~/repo
+    working_directory: ~/work
 
     environment:
       # Customize the JVM maximum heap limit
@@ -41,8 +41,47 @@ jobs:
       - run: mvn package
 
       - store_test_results: # uploads the test metadata from the `target/surefire-reports` directory so that it can show up in the CircleCI dashboard.
-        path: target/surefire-reports
+          path: target/surefire-reports
 
       - store_artifacts: # store the jar as an artifact
-        path: target/TypoChecker-0.0.1-SNAPSHOT.jar
+          path: target/TypoFixer-0.0.1-SNAPSHOT.jar
 
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: .
+          # Must be relative path from root
+          paths:
+              - target/TypoFixer-0.0.1-SNAPSHOT.jar
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory
+          root: .
+          # Must be relative path from root
+          paths:
+              - .elasticbeanstalk/config.global.yml
+
+  deploy-prod:
+    docker:
+      - image: coxauto/aws-ebcli:latest
+    working_directory: ~/work
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/work
+      - run:
+          command: eb --version
+      - run:
+          name: Deploy Master to ElasticBeanstalk
+          command: eb deploy TypoFixer-production
+
+workflows:
+  version: 2
+
+  build-deploy:
+    jobs:
+      - build
+      - deploy-prod:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
