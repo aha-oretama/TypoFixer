@@ -1,10 +1,10 @@
 package jp.aha.oretama.typoChecker;
 
-import jp.aha.oretama.typoChecker.configuration.property.CacheProperty;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,23 +21,31 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class DictionaryRegisterer {
+@Slf4j
+public class BaseDictionaryService {
 
     private static final String JETBRAIN_DICTIONARY = "https://raw.githubusercontent.com/JetBrains/intellij-community/master/spellchecker/src/com/intellij/spellchecker/jetbrains.dic";
 
     private final RestTemplate restTemplate;
-    private final CacheManager cacheManager;
-    private final CacheProperty cacheProperty;
 
-    public synchronized void registDictionary() throws IOException {
-
+    @Cacheable("dictionary_cache_key")
+    public List<String> getDictionaries() {
         RequestEntity requestEntity = RequestEntity.get(URI.create(JETBRAIN_DICTIONARY)).build();
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         String body = responseEntity.getBody();
 
-        List<String> dictionaries = IOUtils.readLines(new StringReader(body));
-        Cache cache = cacheManager.getCache(cacheProperty.getName());
-        cache.evict(cacheProperty.getKey());
-        cache.put(cacheProperty.getKey(), dictionaries);
+        List<String> dictionaries = new ArrayList<>();
+        try {
+            dictionaries.addAll(IOUtils.readLines(new StringReader(body)));
+        } catch (IOException e) {
+            // If error causes, the error logs out, but application does not stop.
+            log.error("JetBrains's dictionary do not read each line.", e);
+        }
+        return dictionaries;
+    }
+
+    @CacheEvict("dictionary_cache_key")
+    public void evict() {
+
     }
 }

@@ -1,23 +1,29 @@
 package jp.aha.oretama.typoChecker.configuration;
 
-import jp.aha.oretama.typoChecker.DictionaryRegisterer;
+import jp.aha.oretama.typoChecker.BaseDictionaryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /**
  * @author aha-oretama
  */
 @Component
 @RequiredArgsConstructor
-public class ScheduleConfiguration {
+public class ScheduleConfiguration implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final DictionaryRegisterer registerer;
+    private final BaseDictionaryService dictionaryService;
 
-    @Scheduled(fixedRate = 24 * 60 * 60 * 1000, initialDelay = 30 * 1000)
-    public void registerDictionaryTask() throws IOException {
-        registerer.registDictionary();
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updateDictionaryCache() {
+        dictionaryService.evict();
+        dictionaryService.getDictionaries();
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+        dictionaryService.getDictionaries();
     }
 }

@@ -1,12 +1,10 @@
 package jp.aha.oretama.typoChecker.configuration;
 
-import jp.aha.oretama.typoChecker.configuration.property.CacheProperty;
+import jp.aha.oretama.typoChecker.BaseDictionaryService;
 import jp.aha.oretama.typoChecker.language.CodingEnglish;
 import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.spelling.SpellingCheckRule;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.RequestScope;
@@ -22,7 +20,7 @@ public class TypoCheckerConfiguration {
 
     @Bean
     @RequestScope
-    public JLanguageTool jLanguageTool(CacheManager cacheManager, CacheProperty cacheProperty) {
+    public JLanguageTool jLanguageTool(BaseDictionaryService dictionaryService) {
         JLanguageTool jLanguageTool = new JLanguageTool(new CodingEnglish());
         // Make all rules disable except SpellingCheckRule.
         List<Rule> allActiveRules = jLanguageTool.getAllActiveRules();
@@ -30,11 +28,9 @@ public class TypoCheckerConfiguration {
         jLanguageTool.disableRules(ruleIds);
 
         // Set accept phrase
-        Cache cache = cacheManager.getCache(cacheProperty.getName());
-        List<String> dictionary = (List<String>)cache.get(cacheProperty.getKey(), List.class);
         for (Rule rule : jLanguageTool.getAllActiveRules()) {
             if (rule instanceof SpellingCheckRule) {
-                ((SpellingCheckRule) rule).acceptPhrases(dictionary);
+                ((SpellingCheckRule) rule).acceptPhrases(dictionaryService.getDictionaries());
             }
         }
         return jLanguageTool;
