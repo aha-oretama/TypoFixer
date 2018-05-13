@@ -1,8 +1,0 @@
-deploy:
-  artifact: target/TypoFixer-0.0.1-SNAPSHOT.jar
-global:
-  application_name: TypoFixer
-  default_platform: Java 8
-  default_region: ap-northeast-1
-  profile: null
-  workspace_type: Application

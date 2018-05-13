@@ -49,32 +49,38 @@ jobs:
       - store_artifacts: # store the jar as an artifact
           path: target/TypoFixer-0.0.1-SNAPSHOT.jar
 
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
-          root: .
-          # Must be relative path from root
-          paths:
-              - target/TypoFixer-0.0.1-SNAPSHOT.jar
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
-          root: .
-          # Must be relative path from root
-          paths:
-              - .elasticbeanstalk/config.global.yml
-
   deploy-prod:
-    docker:
-      - image: coxauto/aws-ebcli:latest
     working_directory: ~/work
+
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:8-jdk
+
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/work
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # create pem file.
+      - run: openssl aes-256-cbc -d -in secret-file-cipher -k $KEY >> src/main/resources/priv8.pem
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
       - run:
-          command: eb --version
-      - run:
-          name: Deploy Master to ElasticBeanstalk
-          command: eb deploy TypoFixer-production
+          name: Deploy Master to Heroku
+          command: |
+            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git master
+
 
 workflows:
   version: 2

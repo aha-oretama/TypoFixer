@@ -9,6 +9,7 @@ import jp.aha.oretama.typoChecker.model.Token;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -244,8 +245,12 @@ public class GitHubTemplate {
     }
 
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
-        Resource resource = resourceLoader.getResource("classpath:" + PEM_FILE);
-        return EncryptionUtil.getPrivateKey(resource.getInputStream());
+        String pemStr = System.getenv().getOrDefault("PEM","");
+        if (StringUtils.isEmpty(pemStr)) {
+            Resource resource = resourceLoader.getResource("classpath:" + PEM_FILE);
+            return EncryptionUtil.getPrivateKey(resource.getInputStream());
+        }
+        return EncryptionUtil.getPrivateKey(pemStr);
     }
 
     private String getJwt() throws IOException, GeneralSecurityException {

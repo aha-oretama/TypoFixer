@@ -28,7 +28,7 @@ public class EncryptionUtil {
         return getPrivateKey(key);
     }
 
-    private static RSAPrivateKey getPrivateKey(String key) throws GeneralSecurityException {
+    public static RSAPrivateKey getPrivateKey(String key) throws GeneralSecurityException {
         String privateKeyPEM = key;
         privateKeyPEM = privateKeyPEM.replace("-----BEGIN PRIVATE KEY-----\n", "");
         privateKeyPEM = privateKeyPEM.replace("-----END PRIVATE KEY-----", "");
