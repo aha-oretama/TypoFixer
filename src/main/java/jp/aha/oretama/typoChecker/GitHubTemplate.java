@@ -29,6 +29,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -230,10 +231,16 @@ public class GitHubTemplate {
         contentsUrl = contentsUrl.replace("{+path}", "typofixer.dic");
         String ref = head.getRef();
 
-        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
-        String content = map.get("content");
+        List<String> dict = new ArrayList<>();
+        try {
+            Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
+            String content = map.get("content");
+            dict.addAll(IOUtils.readLines(new StringReader(content)));
+        }catch (HttpClientErrorException e) {
+            log.debug("There is no typofixer.dic.");
+        }
 
-        return IOUtils.readLines(new StringReader(content));
+        return dict;
     }
 
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
