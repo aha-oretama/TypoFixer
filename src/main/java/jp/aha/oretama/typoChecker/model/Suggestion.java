@@ -11,12 +11,13 @@ import java.util.stream.Collectors;
 @Data
 public class Suggestion {
     private final String path;
+    private final String text;
     private final Integer line;
     private final RuleMatch match;
     public static final String REGISTER_DICTIONARY = "Not typo, register in dictionary and never point out.";
 
     public String createMessage() {
-        String typo = match.getSentence().getText().substring(match.getFromPos(), match.getToPos());
+        String typo = text.substring(match.getFromPos(), match.getToPos());
         StringBuilder message = new StringBuilder(String.format("Typo? \"%s\" at %d line.", typo, line));
 
         if (!match.getSuggestedReplacements().isEmpty()) {

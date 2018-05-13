@@ -49,9 +49,10 @@ public class TypoCheckerService {
         for (Diff diff : added) {
             Map<Integer, String> lineAndStr = diff.getAdded();
             for (Integer line : lineAndStr.keySet()) {
-                List<RuleMatch> matches = jLanguageTool.check(lineAndStr.get(line));
+                String text = lineAndStr.get(line);
+                List<RuleMatch> matches = jLanguageTool.check(text);
                 for (RuleMatch match : matches) {
-                    suggestions.add(new Suggestion(diff.getPath(),line,match));
+                    suggestions.add(new Suggestion(diff.getPath(), text, line,match));
                 }
             }
         }
