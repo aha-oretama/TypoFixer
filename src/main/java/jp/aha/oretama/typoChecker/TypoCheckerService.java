@@ -30,36 +30,7 @@ public class TypoCheckerService {
     private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
     private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,[0-9]+ \\+([0-9]+),[0-9]+ @@");
 
-    public List<Suggestion> getSuggestions(String rawDiff, List<String> dictionary) throws IOException {
-        List<Diff> added = getAdded(rawDiff);
-        setDictionary(dictionary);
-        return spellCheck(added);
-    }
-
-    private void setDictionary(List<String> dictionary) {
-        for (Rule rule : jLanguageTool.getAllActiveRules()) {
-            if(rule instanceof SpellingCheckRule) {
-                ((SpellingCheckRule)rule).acceptPhrases(dictionary);
-            }
-        }
-    }
-
-    private List<Suggestion> spellCheck(final List<Diff> added) throws IOException {
-        List<Suggestion> suggestions = new ArrayList<>();
-        for (Diff diff : added) {
-            Map<Integer, String> lineAndStr = diff.getAdded();
-            for (Integer line : lineAndStr.keySet()) {
-                String text = lineAndStr.get(line);
-                List<RuleMatch> matches = jLanguageTool.check(text);
-                for (RuleMatch match : matches) {
-                    suggestions.add(new Suggestion(diff.getPath(), text, line,match));
-                }
-            }
-        }
-        return suggestions;
-    }
-
-    private List<Diff> getAdded(String rawDiff) {
+    public List<Diff> getAdded(String rawDiff) {
         List<String> lines = Arrays.asList(rawDiff.split("\n"));
 
         List<Diff> diffs = new ArrayList<>();
@@ -97,4 +68,31 @@ public class TypoCheckerService {
         return diffs;
     }
 
+    public List<Suggestion> getSuggestions(List<Diff> added) throws IOException {
+        return spellCheck(added);
+    }
+
+    public TypoCheckerService setDictionary(List<String> dictionary) {
+        for (Rule rule : jLanguageTool.getAllActiveRules()) {
+            if(rule instanceof SpellingCheckRule) {
+                ((SpellingCheckRule)rule).acceptPhrases(dictionary);
+            }
+        }
+        return this;
+    }
+
+    private List<Suggestion> spellCheck(final List<Diff> added) throws IOException {
+        List<Suggestion> suggestions = new ArrayList<>();
+        for (Diff diff : added) {
+            Map<Integer, String> lineAndStr = diff.getAdded();
+            for (Integer line : lineAndStr.keySet()) {
+                String text = lineAndStr.get(line);
+                List<RuleMatch> matches = jLanguageTool.check(text);
+                for (RuleMatch match : matches) {
+                    suggestions.add(new Suggestion(diff.getPath(), text, line,match));
+                }
+            }
+        }
+        return suggestions;
+    }
 }

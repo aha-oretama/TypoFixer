@@ -1,9 +1,7 @@
 package jp.aha.oretama.typoChecker;
 
-import jp.aha.oretama.typoChecker.model.Event;
-import jp.aha.oretama.typoChecker.model.Modification;
-import jp.aha.oretama.typoChecker.model.Suggestion;
-import jp.aha.oretama.typoChecker.model.Token;
+import jp.aha.oretama.typoChecker.model.*;
+import jp.aha.oretama.typoChecker.parser.JavaParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,11 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author aha-oretama
@@ -63,8 +58,27 @@ public class TypoFixerController {
 
                 token = template.getAuthToken(event);
                 String rawDiff = template.getRawDiff(event, token);
+                List<Diff> added = checkerService.getAdded(rawDiff);
+
+                // Execute AST
+                for (Diff diff : added) {
+                    String content = template.getRawContent(event, diff.getPath(), token);
+                    JavaParser parser = new JavaParser(content);
+                    parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
+                    List<Integer> targetLines = parser.getTargetLines();
+
+                    List<Integer> nonTargetLines = diff.getAdded().keySet().stream()
+                            .filter(integer -> !targetLines.contains(integer)).collect(Collectors.toList());
+
+                    for (Integer line : nonTargetLines) {
+                        diff.getAdded().remove(line);
+                    }
+                }
+
+                // Check typo.
                 List<String> dictionary = template.getProjectDictionary(event, token);
-                List<Suggestion> suggestions = checkerService.getSuggestions(rawDiff,dictionary);
+                checkerService.setDictionary(dictionary);
+                List<Suggestion> suggestions = checkerService.getSuggestions(added);
                 boolean isCreated =  template.postComment(event, suggestions, token);
 
                 response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");

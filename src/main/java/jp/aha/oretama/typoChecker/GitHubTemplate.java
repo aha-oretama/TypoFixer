@@ -244,6 +244,16 @@ public class GitHubTemplate {
         return dict;
     }
 
+    public String getRawContent(Event event, String path, Token token) {
+        Event.Head head = event.getPullRequest().getHead();
+        String contentsUrl = head.getRepo().getContentsUrl();
+        contentsUrl = contentsUrl.replace("{+path}", path);
+        String ref = head.getRef();
+
+        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
+        return map.get("content");
+    }
+
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
         String pemStr = System.getenv().getOrDefault("PEM","");
         if (StringUtils.isEmpty(pemStr)) {
@@ -262,5 +272,4 @@ public class GitHubTemplate {
         log.info(jwt);
         return jwt;
     }
-
 }

@@ -59,7 +59,7 @@ public class TypoFixerControllerTest {
 
         doReturn(token).when(template).getAuthToken(event);
         doReturn(rawDiff).when(template).getRawDiff(event, token);
-        doReturn(suggestions).when(checkerService).getSuggestions(rawDiff, dictionary);
+        doReturn(suggestions).when(checkerService).getSuggestions(rawDiff);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }
 
