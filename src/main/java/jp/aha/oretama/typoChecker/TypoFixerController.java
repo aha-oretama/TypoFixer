@@ -2,6 +2,8 @@ package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.*;
 import jp.aha.oretama.typoChecker.parser.JavaParser;
+import jp.aha.oretama.typoChecker.parser.Parser;
+import jp.aha.oretama.typoChecker.parser.ParserFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +26,7 @@ public class TypoFixerController {
     private final TypoCheckerService checkerService;
     private final TypoModifierService modifierService;
     private final GitHubTemplate template;
+    private final ParserFactory factory;
 
     private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
     private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
@@ -31,7 +34,7 @@ public class TypoFixerController {
     private static final String COMMENT_ACTION = "edited";
 
     @GetMapping("ping")
-    public Map<String ,String> ping() {
+    public Map<String, String> ping() {
         HashMap<String, String> response = new HashMap<>();
         response.put("message", "Ping is OK");
         return response;
@@ -63,7 +66,7 @@ public class TypoFixerController {
                 // Execute AST
                 for (Diff diff : added) {
                     String content = template.getRawContent(event, diff.getPath(), token);
-                    JavaParser parser = new JavaParser(content);
+                    Parser parser = factory.create(diff.getPath(), content);
                     parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
                     List<Integer> targetLines = parser.getTargetLines();
 
@@ -79,7 +82,7 @@ public class TypoFixerController {
                 List<String> dictionary = template.getProjectDictionary(event, token);
                 checkerService.setDictionary(dictionary);
                 List<Suggestion> suggestions = checkerService.getSuggestions(added);
-                boolean isCreated =  template.postComment(event, suggestions, token);
+                boolean isCreated = template.postComment(event, suggestions, token);
 
                 response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
                 break;
@@ -91,10 +94,10 @@ public class TypoFixerController {
 
                 token = template.getAuthToken(event);
                 Optional<Modification> modification = modifierService.getModification(event);
-                if(modification.isPresent()) {
+                if (modification.isPresent()) {
                     boolean isModified = template.pushFromComment(event, modification.get(), token);
                     response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
-                }else {
+                } else {
                     response.put("message", "Not target format.");
                 }
                 break;
