@@ -1,8 +1,4 @@
-[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/) [![CircleCI](https://circleci.com/gh/aha-oretama/TypoFixer.svg?style=svg)](https://circleci.com/gh/aha-oretama/TypoFixer)
-
-# No maintenance Intended
-
-Why? Please refer [this article](). 
+[![CircleCI](https://circleci.com/gh/aha-oretama/TypoFixer.svg?style=svg)](https://circleci.com/gh/aha-oretama/TypoFixer)
 
 # TypoFixer
 

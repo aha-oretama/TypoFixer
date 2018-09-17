@@ -5,7 +5,7 @@
 
 	<groupId>jp.aha-oretama</groupId>
 	<artifactId>TypoFixer</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>TypoChecker</name>
@@ -49,6 +49,12 @@
 			<groupId>org.languagetool</groupId>
 			<artifactId>language-all</artifactId>
 			<version>4.0</version>
+		</dependency>
+		<!-- Java Parser -->
+		<dependency>
+			<groupId>com.github.javaparser</groupId>
+			<artifactId>javaparser-core</artifactId>
+			<version>3.6.20</version>
 		</dependency>
 
         <dependency>
