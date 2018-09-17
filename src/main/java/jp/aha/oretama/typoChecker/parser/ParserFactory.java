@@ -14,7 +14,7 @@ public class ParserFactory {
     public Parser create(String path, String content) {
         String extension = FilenameUtils.getExtension(path);
         switch (extension) {
-            case ".java":
+            case "java":
                 return new JavaParser(content);
             default:
                 return new NoopParser(content);
