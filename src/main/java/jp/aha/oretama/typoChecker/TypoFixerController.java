@@ -53,17 +53,19 @@ public class TypoFixerController {
         Token token;
         switch (eventType) {
             case PULL_REQUEST_EVENT_TYPE:
-                // Filter target events.
+                // Filter events except creating or updating a pull request.
                 if (!PULL_REQUEST_ACTIONS.contains(event.getAction())) {
                     response.put("message", "This event action is not a target.");
                     break;
                 }
-
+                // To use GitHub's api, get token.
                 token = template.getAuthToken(event);
+
+                // Get added lines.
                 String rawDiff = template.getRawDiff(event, token);
                 List<Diff> added = checkerService.getAdded(rawDiff);
 
-                // Execute AST
+                // Execute AST.
                 for (Diff diff : added) {
                     String content = template.getRawContent(event, diff.getPath(), token);
                     Parser parser = factory.create(diff.getPath(), content);
@@ -82,16 +84,19 @@ public class TypoFixerController {
                 List<String> dictionary = template.getProjectDictionary(event, token);
                 checkerService.setDictionary(dictionary);
                 List<Suggestion> suggestions = checkerService.getSuggestions(added);
-                boolean isCreated = template.postComment(event, suggestions, token);
 
+                // Create comments of pull request.
+                boolean isCreated = template.postComment(event, suggestions, token);
                 response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
                 break;
             case COMMENT_EVENT_TYPE:
+                // Filter events except comments.
                 if (!COMMENT_ACTION.equals(event.getAction())) {
                     response.put("message", "This event action is not a target.");
                     break;
                 }
 
+                // To use GitHub's api, get token.
                 token = template.getAuthToken(event);
                 Optional<Modification> modification = modifierService.getModification(event);
                 if (modification.isPresent()) {
