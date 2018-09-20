@@ -14,12 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -30,13 +25,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -57,17 +46,24 @@ public class GitHubTemplate {
     private static final long EXPIRATION_TIME = 30 * 1000; // 30 second.
     private static final long TIME_DELTA = 5 * 1000; // 5 second.
 
-    public Token getAuthToken(Event event) throws IOException, GeneralSecurityException {
+    public Token getAuthToken(String installationId) throws IOException, GeneralSecurityException {
         String jwt = getJwt();
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization","Bearer " + jwt);
-        httpHeaders.add("Accept", "application/vnd.github.machine-man-preview+json");
+        RequestEntity requestEntity = RequestEntity
+                .post(URI.create(String.format("https://api.github.com/installations/%s/access_tokens", installationId)))
+                .header("Authorization", "Bearer " + jwt)
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .build();
 
-        HttpEntity<String> requestEntity = new HttpEntity<>(httpHeaders);
-
-        ResponseEntity<Token> response = restTemplate.exchange(String.format("https://api.github.com/installations/%s/access_tokens", event.getInstallation().getId()), HttpMethod.POST, requestEntity, Token.class);
+        ResponseEntity<Token> response = restTemplate.exchange(requestEntity, Token.class);
         return response.getBody();
+    }
+
+    public String getRawContent(String contentsUrl, String path, String ref, String token) {
+        String url = contentsUrl.replace("{+path}", path);
+
+        Map<String, String> map = getShaAndContent(token, url, ref);
+        return map.get("content");
     }
 
     public boolean postComment(Event event, List<Suggestion> suggestions, Token token) {
@@ -89,7 +85,7 @@ public class GitHubTemplate {
                     .body(body);
 
             ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-            if(responseEntity.getStatusCode() ==  HttpStatus.CREATED) {
+            if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
                 isAllCreated = false;
                 log.warn(String.format("The request is failed, path:%s, position:%d.", suggestion.getPath(), suggestion.getLine()));
             }
@@ -114,21 +110,21 @@ public class GitHubTemplate {
         String content;
         Optional<String> sha = Optional.empty();
         try {
-            Map<String, String> map = getShaAndContent(token, contentUrl, ref);
+            Map<String, String> map = getShaAndContent(token.getToken(), contentUrl, ref);
             content = map.get("content");
-            if(modification.isAdded()) {
+            if (modification.isAdded()) {
                 if (!content.endsWith("\n")) {
                     content += "\n";
                 }
                 content += modification.getTypo();
-            }else {
+            } else {
                 List<String> lines = IOUtils.readLines(new StringReader(content));
                 lines.removeIf(s -> s.equals(modification.getTypo()));
                 content = lines.stream().collect(Collectors.joining("\n"));
             }
             sha = Optional.of(map.get("sha"));
-        }catch (final HttpClientErrorException e) {
-            if(e.getStatusCode() != HttpStatus.NOT_FOUND) {
+        } catch (final HttpClientErrorException e) {
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
                 throw e;
             }
             content = modification.getTypo();
@@ -147,7 +143,7 @@ public class GitHubTemplate {
         contentUrl = contentUrl.replace("{+path}", event.getComment().getPath());
         String ref = head.getRef();
 
-        Map<String, String> map = getShaAndContent(token, contentUrl, ref);
+        Map<String, String> map = getShaAndContent(token.getToken(), contentUrl, ref);
 
         List<String> lines = IOUtils.readLines(new StringReader(map.get("content")));
         String older = lines.get(modification.getLine() - 1);
@@ -157,7 +153,7 @@ public class GitHubTemplate {
                 older.replaceAll(modification.getCorrect(), modification.getTypo());
 
         // There are no replacement
-        if(older.equals(newer)) {
+        if (older.equals(newer)) {
             return false;
         }
 
@@ -171,16 +167,16 @@ public class GitHubTemplate {
     }
 
     @NotNull
-    private Map<String,String> getShaAndContent(Token token, String contentUrl, String ref) {
+    private Map<String, String> getShaAndContent(String token, String contentUrl, String ref) {
         RequestEntity requestEntity = RequestEntity
                 .get(URI.create(contentUrl + "?ref=" + ref))
-                .header("Authorization", "token " + token.getToken())
-                .header("Accept","application/vnd.github.VERSION.raw").build();
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.VERSION.raw").build();
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 
         HashMap<String, String> map = new HashMap<>();
-        map.put("sha", responseEntity.getHeaders().getETag().replace("\"","")); // Etag starts and ends with ". Remove ".
+        map.put("sha", responseEntity.getHeaders().getETag().replace("\"", "")); // Etag starts and ends with ". Remove ".
         map.put("content", responseEntity.getBody());
         return map;
     }
@@ -217,7 +213,7 @@ public class GitHubTemplate {
 
     public String getInstallation() throws IOException, GeneralSecurityException {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization","Bearer " + getJwt());
+        httpHeaders.add("Authorization", "Bearer " + getJwt());
         httpHeaders.add("Accept", "application/vnd.github.machine-man-preview+json");
 
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
@@ -234,28 +230,18 @@ public class GitHubTemplate {
 
         List<String> dict = new ArrayList<>();
         try {
-            Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
+            Map<String, String> map = getShaAndContent(token.getToken(), contentsUrl, ref);
             String content = map.get("content");
             dict.addAll(IOUtils.readLines(new StringReader(content)));
-        }catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException e) {
             log.debug("There is no typofixer.dic.");
         }
 
         return dict;
     }
 
-    public String getRawContent(Event event, String path, Token token) {
-        Event.Head head = event.getPullRequest().getHead();
-        String contentsUrl = head.getRepo().getContentsUrl();
-        contentsUrl = contentsUrl.replace("{+path}", path);
-        String ref = head.getRef();
-
-        Map<String, String> map = getShaAndContent(token, contentsUrl, ref);
-        return map.get("content");
-    }
-
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
-        String pemStr = System.getenv().getOrDefault("PEM","");
+        String pemStr = System.getenv().getOrDefault("PEM", "");
         if (StringUtils.isEmpty(pemStr)) {
             Resource resource = resourceLoader.getResource("classpath:" + PEM_FILE);
             return EncryptionUtil.getPrivateKey(resource.getInputStream());

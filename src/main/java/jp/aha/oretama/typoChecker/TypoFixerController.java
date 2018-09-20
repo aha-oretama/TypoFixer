@@ -1,15 +1,10 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.*;
-import jp.aha.oretama.typoChecker.parser.JavaParser;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -59,15 +54,21 @@ public class TypoFixerController {
                     break;
                 }
                 // To use GitHub's api, get token.
-                token = template.getAuthToken(event);
+                token = template.getAuthToken(event.getInstallation().getId());
 
                 // Get added lines.
                 String rawDiff = template.getRawDiff(event, token);
                 List<Diff> added = checkerService.getAdded(rawDiff);
 
+                // Get an option file and filter by file extensions.
+                Event.Head head = event.getPullRequest().getHead();
+                String contentsUrl = head.getRepo().getContentsUrl();
+                String ref = head.getRef();
+                template.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
+
                 // Execute AST.
                 for (Diff diff : added) {
-                    String content = template.getRawContent(event, diff.getPath(), token);
+                    String content = template.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken());
                     Parser parser = factory.create(diff.getPath(), content);
                     parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
                     List<Integer> targetLines = parser.getTargetLines();
@@ -97,7 +98,7 @@ public class TypoFixerController {
                 }
 
                 // To use GitHub's api, get token.
-                token = template.getAuthToken(event);
+                token = template.getAuthToken(event.getInstallation().getId());
                 Optional<Modification> modification = modifierService.getModification(event);
                 if (modification.isPresent()) {
                     boolean isModified = template.pushFromComment(event, modification.get(), token);

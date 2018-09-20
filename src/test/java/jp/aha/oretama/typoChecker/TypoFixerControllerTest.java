@@ -21,9 +21,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doReturn;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author aha-oretama
@@ -48,8 +50,14 @@ public class TypoFixerControllerTest {
     @MockBean
     private GitHubTemplate template;
 
+    private Event event;
+    private String installationId = "1234";
+    private String contentsUrl = "http://api.github.com/repos/octocat/Hello-World/contents/{+path}";
+    private String ref = "new-topic";
+
     private Token token = new Token();
-    private Event event = new Event();
+    private String tokenKey = "tokenKey";
+
     private String rawDiff = "This is raw diff.";
     private String path = "src/main/java/test.java";
     private List<Diff> added = Collections.singletonList(new Diff(path, new HashMap<Integer, String>() {
@@ -60,18 +68,40 @@ public class TypoFixerControllerTest {
     private String content = "Content.\nThis is raw diff.";
     private List<Suggestion> suggestions = new ArrayList<>();
 
+    private Event createEvent() {
+        Event.Installation installation = new Event.Installation();
+        installation.setId(installationId);
+        Event.Repo repo = new Event.Repo();
+        repo.setContentsUrl(contentsUrl);
+        Event.Head head = new Event.Head();
+        head.setRef(ref);
+        head.setRepo(repo);
+        Event.PullRequest pullRequest = new Event.PullRequest();
+        pullRequest.setHead(head);
+        Event event = new Event();
+
+        event.setPullRequest(pullRequest);
+        event.setInstallation(installation);
+
+        return event;
+    }
+
     @Before
     public void setUp() throws Exception {
-        token = new Token();
-        suggestions.add(new Suggestion(path, "this is sentence",99, null));
-        Parser parser = new NoopParser(content);
-        List<String> dictionary = new ArrayList<>();
+        // Input
+        event = createEvent();
 
-        doReturn(token).when(template).getAuthToken(event);
+        // To mock
+        Parser parser = new NoopParser(content);
+        token.setToken(tokenKey);
+        doReturn(token).when(template).getAuthToken(installationId);
+
         doReturn(rawDiff).when(template).getRawDiff(event, token);
         doReturn(added).when(checkerService).getAdded(rawDiff);
-        doReturn(content).when(template).getRawContent(event, path, token);
+        doReturn(content).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
         doReturn(parser).when(factory).create(path, content);
+
+        suggestions.add(new Suggestion(path, "this is sentence", 99, null));
         doReturn(suggestions).when(checkerService).getSuggestions(added);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }
@@ -101,7 +131,7 @@ public class TypoFixerControllerTest {
         Map<String, String> expected = new HashMap<>();
         expected.put("message", "Event is not from GitHub or not target event.");
 
-        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event","issue_comment"))
+        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event", "issue_comment"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(mapper.writeValueAsString(expected)));
     }
@@ -117,7 +147,7 @@ public class TypoFixerControllerTest {
         expected.put("message", "This event action is not a target.");
 
         // Act
-        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event","pull_request").content(body).contentType(MediaType.APPLICATION_JSON))
+        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event", "pull_request").content(body).contentType(MediaType.APPLICATION_JSON))
                 // Assert
                 .andExpect(status().isOk())
                 .andExpect(content().string(mapper.writeValueAsString(expected)));
@@ -133,8 +163,8 @@ public class TypoFixerControllerTest {
         expected.put("message", "Comment succeeded.");
 
         // Act
-        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event","pull_request").content(body).contentType(MediaType.APPLICATION_JSON))
-        // Assert
+        this.mvc.perform(post("/typo-fixer").header("X-GitHub-Event", "pull_request").content(body).contentType(MediaType.APPLICATION_JSON))
+                // Assert
                 .andExpect(status().isOk())
                 .andExpect(content().string(mapper.writeValueAsString(expected)));
     }
