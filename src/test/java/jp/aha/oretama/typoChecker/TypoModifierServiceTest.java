@@ -21,7 +21,7 @@ public class TypoModifierServiceTest {
     TypoModifierService service = new TypoModifierService();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         event = new Event();
 
         comment = new Event.Comment();

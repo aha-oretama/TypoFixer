@@ -59,11 +59,9 @@ public class GitHubTemplate {
         return response.getBody();
     }
 
-    public String getRawContent(String contentsUrl, String path, String ref, String token) {
+    public Optional<String> getRawContent(String contentsUrl, String path, String ref, String token) {
         String url = contentsUrl.replace("{+path}", path);
-
-        Map<String, String> map = getShaAndContent(token, url, ref);
-        return map.get("content");
+        return getContent(token, url, ref);
     }
 
     public boolean postComment(Event event, List<Suggestion> suggestions, Token token) {
@@ -158,7 +156,7 @@ public class GitHubTemplate {
         }
 
         lines.set(modification.getLine() - 1, newer);
-        String newContent = lines.stream().collect(Collectors.joining("\n"));
+        String newContent = String.join("\n", lines);
         String newEncoded = Base64.getEncoder().encodeToString(newContent.getBytes(StandardCharsets.UTF_8));
         String message = modification.isAdded() ?
                 String.format("TypoFixer has fixed typo from \"%s\" to \"%s\" at %d line.", modification.getTypo(), modification.getCorrect(), modification.getLine()) :
@@ -179,6 +177,32 @@ public class GitHubTemplate {
         map.put("sha", responseEntity.getHeaders().getETag().replace("\"", "")); // Etag starts and ends with ". Remove ".
         map.put("content", responseEntity.getBody());
         return map;
+    }
+
+    /**
+     * Get a content in a repository.
+     *
+     * @return content's string. null if file does not exist.
+     * @see <a href="https://developer.github.com/v3/repos/contents/#get-contents">GitHub API</a>
+     */
+    @NotNull
+    private Optional<String> getContent(String token, String contentUrl, String ref) {
+        String content;
+
+        RequestEntity requestEntity = RequestEntity
+                .get(URI.create(contentUrl + "?ref=" + ref))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.VERSION.raw").build();
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+            content = responseEntity.getBody();
+        } catch (final HttpClientErrorException e) {
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                throw e;
+            }
+            content = null;
+        }
+        return Optional.ofNullable(content);
     }
 
     private boolean pushContent(Token token, String contentsUrl, String encoded, String message, Optional<String> sha, String ref) {
@@ -220,24 +244,6 @@ public class GitHubTemplate {
 
         ResponseEntity<String> exchange = restTemplate.exchange("https://api.github.com/app/installations", HttpMethod.GET, entity, String.class);
         return exchange.getBody();
-    }
-
-    public List<String> getProjectDictionary(Event event, Token token) throws IOException {
-        Event.Head head = event.getPullRequest().getHead();
-        String contentsUrl = head.getRepo().getContentsUrl();
-        contentsUrl = contentsUrl.replace("{+path}", "typofixer.dic");
-        String ref = head.getRef();
-
-        List<String> dict = new ArrayList<>();
-        try {
-            Map<String, String> map = getShaAndContent(token.getToken(), contentsUrl, ref);
-            String content = map.get("content");
-            dict.addAll(IOUtils.readLines(new StringReader(content)));
-        } catch (HttpClientErrorException e) {
-            log.debug("There is no typofixer.dic.");
-        }
-
-        return dict;
     }
 
     private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {

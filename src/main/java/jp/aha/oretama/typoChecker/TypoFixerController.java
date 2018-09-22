@@ -68,7 +68,8 @@ public class TypoFixerController {
 
                 // Execute AST.
                 for (Diff diff : added) {
-                    String content = template.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken());
+                    String content = template.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken())
+                            .orElseThrow(() -> new RuntimeException("Getting contents fails. It may be because getting diffs is not correct."));
                     Parser parser = factory.create(diff.getPath(), content);
                     parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
                     List<Integer> targetLines = parser.getTargetLines();
@@ -82,7 +83,7 @@ public class TypoFixerController {
                 }
 
                 // Check typo.
-                List<String> dictionary = template.getProjectDictionary(event, token);
+                List<String> dictionary = checkerService.getRepositoryDictionary(event, token);
                 checkerService.setDictionary(dictionary);
                 List<Suggestion> suggestions = checkerService.getSuggestions(added);
 

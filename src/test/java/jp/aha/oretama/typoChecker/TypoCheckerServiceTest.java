@@ -10,7 +10,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author aha-oretama
@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class TypoCheckerServiceTest {
 
-    TypoCheckerService service = new TypoCheckerService(new JLanguageTool(new AmericanEnglish()));
+    TypoCheckerService service = new TypoCheckerService(new JLanguageTool(new AmericanEnglish()), null);
 
     private String rawDiff = "diff --git a/README.md b/README.md\n" +
             "index f247396..93a9c32 100644\n" +

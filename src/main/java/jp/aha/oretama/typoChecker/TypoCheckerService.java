@@ -1,8 +1,13 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Diff;
+import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Suggestion;
+import jp.aha.oretama.typoChecker.model.Token;
+import jp.aha.oretama.typoChecker.utils.FuntionalExtension;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
@@ -10,11 +15,8 @@ import org.languagetool.rules.spelling.SpellingCheckRule;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.StringReader;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,9 +25,11 @@ import java.util.regex.Pattern;
  */
 @Data
 @Service
+@Slf4j
 public class TypoCheckerService {
 
     private final JLanguageTool jLanguageTool;
+    private final GitHubTemplate template;
 
     private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
     private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,[0-9]+ \\+([0-9]+),[0-9]+ @@");
@@ -39,7 +43,7 @@ public class TypoCheckerService {
         for (String line : lines) {
             // Get Path.
             Matcher pathMatcher = PATH_PATTERN.matcher(line);
-            if(pathMatcher.find() && pathMatcher.groupCount() >= 1)  {
+            if (pathMatcher.find() && pathMatcher.groupCount() >= 1) {
                 Diff diff = new Diff(pathMatcher.group(1), new HashMap<>());
                 diffs.add(diff);
                 continue;
@@ -57,7 +61,7 @@ public class TypoCheckerService {
                 continue;
             }
 
-            if (line.startsWith("+")){
+            if (line.startsWith("+")) {
                 // Last diff object needs.
                 // Remove first character because first character represents sign.
                 diffs.get(diffs.size() - 1).getAdded().put(lineNumber, line.substring(1, line.length()));
@@ -72,10 +76,23 @@ public class TypoCheckerService {
         return spellCheck(added);
     }
 
+    public List<String> getRepositoryDictionary(Event event, Token token) {
+        Event.Head head = event.getPullRequest().getHead();
+        String contentsUrl = head.getRepo().getContentsUrl();
+        String ref = head.getRef();
+
+        List<String> dict = new ArrayList<>();
+        template.getRawContent(contentsUrl, "typofixer.dic", ref, token.getToken())
+                .ifPresent(FuntionalExtension.Try(s -> IOUtils.readLines(new StringReader(s)),
+                        (e, s) -> log.error("IOUtils#readLines throws an error.", e)));
+        return dict;
+    }
+
+
     public TypoCheckerService setDictionary(List<String> dictionary) {
         for (Rule rule : jLanguageTool.getAllActiveRules()) {
-            if(rule instanceof SpellingCheckRule) {
-                ((SpellingCheckRule)rule).acceptPhrases(dictionary);
+            if (rule instanceof SpellingCheckRule) {
+                ((SpellingCheckRule) rule).acceptPhrases(dictionary);
             }
         }
         return this;
@@ -89,7 +106,7 @@ public class TypoCheckerService {
                 String text = lineAndStr.get(line);
                 List<RuleMatch> matches = jLanguageTool.check(text);
                 for (RuleMatch match : matches) {
-                    suggestions.add(new Suggestion(diff.getPath(), text, line,match));
+                    suggestions.add(new Suggestion(diff.getPath(), text, line, match));
                 }
             }
         }

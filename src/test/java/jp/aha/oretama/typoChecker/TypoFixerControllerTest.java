@@ -98,7 +98,7 @@ public class TypoFixerControllerTest {
 
         doReturn(rawDiff).when(template).getRawDiff(event, token);
         doReturn(added).when(checkerService).getAdded(rawDiff);
-        doReturn(content).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
+        doReturn(Optional.of(content)).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
         doReturn(parser).when(factory).create(path, content);
 
         suggestions.add(new Suggestion(path, "this is sentence", 99, null));

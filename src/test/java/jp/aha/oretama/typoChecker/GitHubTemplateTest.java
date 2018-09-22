@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -16,10 +15,12 @@ import org.springframework.test.web.client.MockRestServiceServer;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
@@ -72,22 +73,34 @@ public class GitHubTemplateTest {
 
         // Response
         String content = "This is content";
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setETag("\"686897696a7c876b7e\"");
 
         this.server
                 .expect(requestTo("http://api.github.com/repos/octocat/Hello-World/contents/src/test/java/jp/aha/oretama/typoChecker/GitHubTemplateTest.java?ref=new-topic"))
                 .andExpect(header("Authorization", "token 1234567890"))
                 .andExpect(header("Accept", "application/vnd.github.VERSION.raw"))
-                .andRespond(withSuccess(content, MediaType.APPLICATION_JSON).headers(httpHeaders))
+                .andRespond(withSuccess(content, MediaType.APPLICATION_JSON))
         ;
 
-        String result = template.getRawContent(contentsUrl, path, ref, token);
-        assertEquals(content, result);
+        Optional<String> result = template.getRawContent(contentsUrl, path, ref, token);
+        assertEquals(content, result.get());
     }
 
     @Test
     public void getRawContentWhenFileNotExists() {
-        fail();
+        // Input
+        String contentsUrl = "http://api.github.com/repos/octocat/Hello-World/contents/{+path}";
+        String ref = "new-topic";
+        String token = "1234567890";
+        // Define a path
+        String path = "src/test/java/jp/aha/oretama/typoChecker/GitHubTemplateTest.java";
+
+        this.server
+                .expect(requestTo("http://api.github.com/repos/octocat/Hello-World/contents/src/test/java/jp/aha/oretama/typoChecker/GitHubTemplateTest.java?ref=new-topic"))
+                .andExpect(header("Authorization", "token 1234567890"))
+                .andExpect(header("Accept", "application/vnd.github.VERSION.raw"))
+                .andRespond(withNoContent());
+
+        Optional<String> result = template.getRawContent(contentsUrl, path, ref, token);
+        assertFalse(result.isPresent());
     }
 }
