@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class TypoCheckerService {
 
     private final JLanguageTool jLanguageTool;
-    private final GitHubTemplate template;
+    private final GitHubRepository repository;
 
     private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
     private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,[0-9]+ \\+([0-9]+),[0-9]+ @@");
@@ -82,7 +82,7 @@ public class TypoCheckerService {
         String ref = head.getRef();
 
         List<String> dict = new ArrayList<>();
-        template.getRawContent(contentsUrl, "typofixer.dic", ref, token.getToken())
+        repository.getRawContent(contentsUrl, "typofixer.dic", ref, token.getToken())
                 .ifPresent(FuntionalExtension.Try(s -> IOUtils.readLines(new StringReader(s)),
                         (e, s) -> log.error("IOUtils#readLines throws an error.", e)));
         return dict;

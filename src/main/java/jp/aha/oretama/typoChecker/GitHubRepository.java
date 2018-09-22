@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class GitHubTemplate {
+public class GitHubRepository {
 
     @Value("${application.pem-file}")
     private String PEM_FILE;

@@ -27,11 +27,11 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  * @author aha-oretama
  */
 @RunWith(SpringRunner.class)
-@RestClientTest({GitHubTemplate.class, TestRestTemplateConfiguration.class})
-public class GitHubTemplateTest {
+@RestClientTest({GitHubRepository.class, TestRestTemplateConfiguration.class})
+public class GitHubRepositoryTest {
 
     @Autowired
-    private GitHubTemplate template;
+    private GitHubRepository repository;
 
     @Autowired
     private ObjectMapper mapper;
@@ -57,7 +57,7 @@ public class GitHubTemplateTest {
                 .andExpect(header("Accept", "application/vnd.github.machine-man-preview+json"))
                 .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
 
-        Token authToken = this.template.getAuthToken(installationId);
+        Token authToken = this.repository.getAuthToken(installationId);
         assertEquals(token.getToken(), authToken.getToken());
         assertEquals(token.getExpiresAt(), authToken.getExpiresAt());
     }
@@ -81,7 +81,7 @@ public class GitHubTemplateTest {
                 .andRespond(withSuccess(content, MediaType.APPLICATION_JSON))
         ;
 
-        Optional<String> result = template.getRawContent(contentsUrl, path, ref, token);
+        Optional<String> result = repository.getRawContent(contentsUrl, path, ref, token);
         assertEquals(content, result.get());
     }
 
@@ -100,7 +100,7 @@ public class GitHubTemplateTest {
                 .andExpect(header("Accept", "application/vnd.github.VERSION.raw"))
                 .andRespond(withNoContent());
 
-        Optional<String> result = template.getRawContent(contentsUrl, path, ref, token);
+        Optional<String> result = repository.getRawContent(contentsUrl, path, ref, token);
         assertFalse(result.isPresent());
     }
 
@@ -119,7 +119,7 @@ public class GitHubTemplateTest {
                 .andExpect(header("Accept", "application/vnd.github.machine-man-preview+json"))
                 .andRespond(withSuccess(content, MediaType.APPLICATION_JSON));
 
-        String rawDiff = template.getRawDiff(diffUrl, token);
+        String rawDiff = repository.getRawDiff(diffUrl, token);
         assertEquals(content, rawDiff);
     }
 }

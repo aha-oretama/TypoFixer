@@ -21,7 +21,7 @@ public class TypoFixerController {
 
     private final TypoCheckerService checkerService;
     private final TypoModifierService modifierService;
-    private final GitHubTemplate template;
+    private final GitHubRepository repository;
     private final ParserFactory factory;
     private final ObjectMapper mapper;
 
@@ -40,7 +40,7 @@ public class TypoFixerController {
     // TODO: this is for debug. Delete in production.
     @GetMapping("valid")
     public String getValid() throws IOException, GeneralSecurityException {
-        return template.getInstallation();
+        return repository.getInstallation();
     }
 
     @PostMapping(value = "typo-fixer")
@@ -56,17 +56,17 @@ public class TypoFixerController {
                     break;
                 }
                 // To use GitHub's api, get token.
-                token = template.getAuthToken(event.getInstallation().getId());
+                token = repository.getAuthToken(event.getInstallation().getId());
 
                 // Get added lines.
-                String rawDiff = template.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
+                String rawDiff = repository.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
                 List<Diff> added = checkerService.getAdded(rawDiff);
 
                 // Get an option file and filter by file extensions.
                 Event.Head head = event.getPullRequest().getHead();
                 String contentsUrl = head.getRepo().getContentsUrl();
                 String ref = head.getRef();
-                Optional<String> configContent = template.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
+                Optional<String> configContent = repository.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
                 configContent.ifPresent(s -> {
                     Config config = mapper.convertValue(s, Config.class);
                     added.removeIf(diff -> !config.extensions.contains("." + diff.getExtension()));
@@ -74,7 +74,7 @@ public class TypoFixerController {
 
                 // Execute AST.
                 for (Diff diff : added) {
-                    String content = template.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken())
+                    String content = repository.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken())
                             .orElseThrow(() -> new RuntimeException("Getting contents fails. It may be because getting diffs is not correct."));
                     Parser parser = factory.create(diff.getPath(), content);
                     parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
@@ -94,7 +94,7 @@ public class TypoFixerController {
                 List<Suggestion> suggestions = checkerService.getSuggestions(added);
 
                 // Create comments of pull request.
-                boolean isCreated = template.postComment(event, suggestions, token);
+                boolean isCreated = repository.postComment(event, suggestions, token);
                 response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
                 break;
             case COMMENT_EVENT_TYPE:
@@ -105,10 +105,10 @@ public class TypoFixerController {
                 }
 
                 // To use GitHub's api, get token.
-                token = template.getAuthToken(event.getInstallation().getId());
+                token = repository.getAuthToken(event.getInstallation().getId());
                 Optional<Modification> modification = modifierService.getModification(event);
                 if (modification.isPresent()) {
-                    boolean isModified = template.pushFromComment(event, modification.get(), token);
+                    boolean isModified = repository.pushFromComment(event, modification.get(), token);
                     response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
                 } else {
                     response.put("message", "Not target format.");

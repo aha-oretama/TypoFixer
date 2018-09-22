@@ -48,7 +48,7 @@ public class TypoFixerControllerTest {
     @MockBean
     private ParserFactory factory;
     @MockBean
-    private GitHubTemplate template;
+    private GitHubRepository template;
 
     private Event event;
     private String installationId = "1234";
