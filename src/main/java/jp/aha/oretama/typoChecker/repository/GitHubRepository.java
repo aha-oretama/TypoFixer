@@ -1,20 +1,13 @@
-package jp.aha.oretama.typoChecker;
+package jp.aha.oretama.typoChecker.repository;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Modification;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
-import jp.aha.oretama.typoChecker.utils.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,7 +18,6 @@ import java.io.StringReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,18 +29,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitHubRepository {
 
-    @Value("${application.pem-file}")
-    private String PEM_FILE;
-    @Value("${application.app-id}")
-    private String appId;
     private final RestTemplate restTemplate;
-    private final ResourceLoader resourceLoader;
-
-    private static final long EXPIRATION_TIME = 30 * 1000; // 30 second.
-    private static final long TIME_DELTA = 5 * 1000; // 5 second.
+    private final EncryptionRepository encryptionRepository;
 
     public Token getAuthToken(String installationId) throws IOException, GeneralSecurityException {
-        String jwt = getJwt();
+        String jwt = encryptionRepository.getJwt();
 
         RequestEntity requestEntity = RequestEntity
                 .post(URI.create(String.format("https://api.github.com/installations/%s/access_tokens", installationId)))
@@ -237,7 +222,7 @@ public class GitHubRepository {
 
     public String getInstallation() throws IOException, GeneralSecurityException {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + getJwt());
+        httpHeaders.add("Authorization", "Bearer " + encryptionRepository.getJwt());
         httpHeaders.add("Accept", "application/vnd.github.machine-man-preview+json");
 
         HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
@@ -246,22 +231,4 @@ public class GitHubRepository {
         return exchange.getBody();
     }
 
-    private PrivateKey getPrivateKey() throws IOException, GeneralSecurityException {
-        String pemStr = System.getenv().getOrDefault("PEM", "");
-        if (StringUtils.isEmpty(pemStr)) {
-            Resource resource = resourceLoader.getResource("classpath:" + PEM_FILE);
-            return EncryptionUtil.getPrivateKey(resource.getInputStream());
-        }
-        return EncryptionUtil.getPrivateKey(pemStr);
-    }
-
-    private String getJwt() throws IOException, GeneralSecurityException {
-        String jwt = Jwts.builder().setIssuer(appId)
-                .setIssuedAt(new Date(System.currentTimeMillis() - TIME_DELTA))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.RS256, getPrivateKey())
-                .compact();
-        log.info(jwt);
-        return jwt;
-    }
 }

@@ -8,6 +8,7 @@ import jp.aha.oretama.typoChecker.model.Token;
 import jp.aha.oretama.typoChecker.parser.NoopParser;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
+import jp.aha.oretama.typoChecker.repository.GitHubRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

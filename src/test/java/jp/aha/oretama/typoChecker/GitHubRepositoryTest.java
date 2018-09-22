@@ -3,11 +3,13 @@ package jp.aha.oretama.typoChecker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoChecker.configuration.TestRestTemplateConfiguration;
 import jp.aha.oretama.typoChecker.model.Token;
-import org.hamcrest.core.StringContains;
+import jp.aha.oretama.typoChecker.repository.EncryptionRepository;
+import jp.aha.oretama.typoChecker.repository.GitHubRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -19,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -39,10 +42,16 @@ public class GitHubRepositoryTest {
     @Autowired
     private MockRestServiceServer server;
 
+    @MockBean
+    private EncryptionRepository encryptionRepository;
+
     @Test
     public void getAuthToken() throws IOException, GeneralSecurityException {
         // Input
         String installationId = "1234";
+
+        // Mock
+        doReturn("jwt1234").when(encryptionRepository).getJwt();
 
         // Response
         Token token = new Token();
@@ -53,7 +62,7 @@ public class GitHubRepositoryTest {
         this.server
                 .expect(requestTo("https://api.github.com/installations/1234/access_tokens"))
                 .andExpect(method(HttpMethod.POST))
-                .andExpect(header("Authorization", new StringContains("Bearer")))
+                .andExpect(header("Authorization", "Bearer jwt1234"))
                 .andExpect(header("Accept", "application/vnd.github.machine-man-preview+json"))
                 .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
 

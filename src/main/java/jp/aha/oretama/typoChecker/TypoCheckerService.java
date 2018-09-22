@@ -4,6 +4,7 @@ import jp.aha.oretama.typoChecker.model.Diff;
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
+import jp.aha.oretama.typoChecker.repository.GitHubRepository;
 import jp.aha.oretama.typoChecker.utils.FuntionalExtension;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

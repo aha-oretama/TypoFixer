@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoChecker.model.*;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
+import jp.aha.oretama.typoChecker.repository.GitHubRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
