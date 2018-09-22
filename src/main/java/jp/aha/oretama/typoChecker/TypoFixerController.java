@@ -1,5 +1,6 @@
 package jp.aha.oretama.typoChecker;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoChecker.model.*;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
@@ -22,6 +23,7 @@ public class TypoFixerController {
     private final TypoModifierService modifierService;
     private final GitHubTemplate template;
     private final ParserFactory factory;
+    private final ObjectMapper mapper;
 
     private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
     private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
@@ -64,7 +66,11 @@ public class TypoFixerController {
                 Event.Head head = event.getPullRequest().getHead();
                 String contentsUrl = head.getRepo().getContentsUrl();
                 String ref = head.getRef();
-                template.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
+                Optional<String> configContent = template.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
+                configContent.ifPresent(s -> {
+                    Config config = mapper.convertValue(s, Config.class);
+                    added.removeIf(diff -> !config.extensions.contains("." + diff.getExtension()));
+                });
 
                 // Execute AST.
                 for (Diff diff : added) {

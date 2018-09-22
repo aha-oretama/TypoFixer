@@ -46,8 +46,8 @@ public class TypoModifierServiceTest {
         Modification modification = optModification.get();
         assertTrue(modification.isAdded());
         assertEquals(14, modification.getLine());
-        assertEquals("println",modification.getTypo());
-        assertEquals("print",modification.getCorrect());
+        assertEquals("println", modification.getTypo());
+        assertEquals("print", modification.getCorrect());
     }
 
     @Test
@@ -63,8 +63,8 @@ public class TypoModifierServiceTest {
         Modification modification = optModification.get();
         assertFalse(modification.isAdded());
         assertEquals(14, modification.getLine());
-        assertEquals("println",modification.getTypo());
-        assertEquals("print",modification.getCorrect());
+        assertEquals("println", modification.getTypo());
+        assertEquals("print", modification.getCorrect());
     }
 
 }
