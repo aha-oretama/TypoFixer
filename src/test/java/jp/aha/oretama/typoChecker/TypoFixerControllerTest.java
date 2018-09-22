@@ -52,12 +52,12 @@ public class TypoFixerControllerTest {
 
     private Event event;
     private String installationId = "1234";
+    private String diffUrl = "https://github.com/octocat/Hello-World/pull/1347.diff";
     private String contentsUrl = "http://api.github.com/repos/octocat/Hello-World/contents/{+path}";
     private String ref = "new-topic";
 
     private Token token = new Token();
     private String tokenKey = "tokenKey";
-
     private String rawDiff = "This is raw diff.";
     private String path = "src/main/java/test.java";
     private List<Diff> added = Collections.singletonList(new Diff(path, new HashMap<Integer, String>() {
@@ -78,6 +78,7 @@ public class TypoFixerControllerTest {
         head.setRepo(repo);
         Event.PullRequest pullRequest = new Event.PullRequest();
         pullRequest.setHead(head);
+        pullRequest.setDiffUrl(diffUrl);
         Event event = new Event();
 
         event.setPullRequest(pullRequest);
@@ -96,7 +97,7 @@ public class TypoFixerControllerTest {
         token.setToken(tokenKey);
         doReturn(token).when(template).getAuthToken(installationId);
 
-        doReturn(rawDiff).when(template).getRawDiff(event, token);
+        doReturn(rawDiff).when(template).getRawDiff(diffUrl, tokenKey);
         doReturn(added).when(checkerService).getAdded(rawDiff);
         doReturn(Optional.of(content)).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
         doReturn(parser).when(factory).create(path, content);

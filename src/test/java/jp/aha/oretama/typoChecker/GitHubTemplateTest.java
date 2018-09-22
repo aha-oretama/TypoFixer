@@ -103,4 +103,23 @@ public class GitHubTemplateTest {
         Optional<String> result = template.getRawContent(contentsUrl, path, ref, token);
         assertFalse(result.isPresent());
     }
+
+    @Test
+    public void getRawDiff() {
+        // Input
+        String diffUrl = "https://github.com/octocat/Hello-World/pull/1347.diff";
+        String token = "1234";
+
+        // Output
+        String content = "This is raw diff.";
+
+        this.server
+                .expect(requestTo("https://github.com/octocat/Hello-World/pull/1347.diff"))
+                .andExpect(header("Authorization", "token 1234"))
+                .andExpect(header("Accept", "application/vnd.github.machine-man-preview+json"))
+                .andRespond(withSuccess(content, MediaType.APPLICATION_JSON));
+
+        String rawDiff = template.getRawDiff(diffUrl, token);
+        assertEquals(content, rawDiff);
+    }
 }

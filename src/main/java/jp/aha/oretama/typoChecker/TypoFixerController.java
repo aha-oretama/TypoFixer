@@ -59,7 +59,7 @@ public class TypoFixerController {
                 token = template.getAuthToken(event.getInstallation().getId());
 
                 // Get added lines.
-                String rawDiff = template.getRawDiff(event, token);
+                String rawDiff = template.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
                 List<Diff> added = checkerService.getAdded(rawDiff);
 
                 // Get an option file and filter by file extensions.

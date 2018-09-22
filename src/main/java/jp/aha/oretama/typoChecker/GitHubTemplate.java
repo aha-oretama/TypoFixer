@@ -59,6 +59,18 @@ public class GitHubTemplate {
         return response.getBody();
     }
 
+    public String getRawDiff(String diffUrl, String token) {
+        RequestEntity requestEntity = RequestEntity
+                .get(URI.create(diffUrl))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .build();
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+        return responseEntity.getBody();
+    }
+
     public Optional<String> getRawContent(String contentsUrl, String path, String ref, String token) {
         String url = contentsUrl.replace("{+path}", path);
         return getContent(token, url, ref);
@@ -220,19 +232,6 @@ public class GitHubTemplate {
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         return responseEntity.getStatusCode() == HttpStatus.OK || responseEntity.getStatusCode() == HttpStatus.CREATED;
-    }
-
-
-    public String getRawDiff(Event event, Token token) {
-        RequestEntity requestEntity = RequestEntity
-                .get(URI.create(event.getPullRequest().getDiffUrl()))
-                .header("Authorization", "token " + token.getToken())
-                .header("Accept", "application/vnd.github.machine-man-preview+json")
-                .build();
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-
-        return responseEntity.getBody();
     }
 
     public String getInstallation() throws IOException, GeneralSecurityException {
