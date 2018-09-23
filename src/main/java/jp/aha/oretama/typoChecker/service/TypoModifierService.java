@@ -5,11 +5,7 @@ import jp.aha.oretama.typoChecker.model.Modification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +16,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class TypoModifierService {
 
-    private static final Pattern CHECK_PATTERN =Pattern.compile("- \\[x\\] (.*)",Pattern.MULTILINE);
+    private static final Pattern CHECK_PATTERN = Pattern.compile("- \\[x\\] (.*)", Pattern.MULTILINE);
     private static final Pattern TYPO_LINE_PATTERN = Pattern.compile("Typo\\? \"(.+)\" at (\\d+) line\\.", Pattern.MULTILINE);
 
     public Optional<Modification> getModification(Event event) {
@@ -29,7 +25,7 @@ public class TypoModifierService {
 
         List<String> typoAndLine = getTypoAndLine(after);
         // Not the target comment
-        if(typoAndLine.size() != 2) {
+        if (typoAndLine.size() != 2) {
             return Optional.empty();
         }
 
@@ -58,7 +54,7 @@ public class TypoModifierService {
         Matcher matcher = CHECK_PATTERN.matcher(body);
         List<String> checkedItems = new ArrayList<>();
 
-        if(matcher.find()) {
+        if (matcher.find()) {
             for (int i = 1; i <= matcher.groupCount(); i++) {
                 checkedItems.add(matcher.group(i));
             }
@@ -70,7 +66,7 @@ public class TypoModifierService {
         Matcher matcher = TYPO_LINE_PATTERN.matcher(body);
 
         List<String> list = new ArrayList<>();
-        if(matcher.find()) {
+        if (matcher.find()) {
             list.add(matcher.group(1));
             list.add(matcher.group(2));
         }

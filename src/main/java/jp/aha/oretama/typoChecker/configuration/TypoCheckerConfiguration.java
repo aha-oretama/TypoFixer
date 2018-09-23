@@ -1,7 +1,7 @@
 package jp.aha.oretama.typoChecker.configuration;
 
-import jp.aha.oretama.typoChecker.service.BaseDictionaryService;
 import jp.aha.oretama.typoChecker.language.CodingEnglish;
+import jp.aha.oretama.typoChecker.service.BaseDictionaryService;
 import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.spelling.SpellingCheckRule;
