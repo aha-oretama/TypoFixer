@@ -33,7 +33,7 @@ public class TypoCheckerService {
     private final GitHubRepository repository;
 
     private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
-    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ .+ \\+([0-9]+),[0-9]+ @@");
+    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,?[0-9]* \\+([0-9]+),?[0-9]* @@");
 
     public List<Diff> getAdded(String rawDiff) {
         List<String> lines = Arrays.asList(rawDiff.split("\n"));
@@ -55,10 +55,6 @@ public class TypoCheckerService {
             if (lineNumberMatcher.find() && lineNumberMatcher.groupCount() >= 1) {
                 // Last diff object needs because line number count up.
                 lineNumber = Integer.valueOf(lineNumberMatcher.group(1));
-                continue;
-            }
-
-            if (!line.startsWith("+") && !line.startsWith(" ")) {
                 continue;
             }
 

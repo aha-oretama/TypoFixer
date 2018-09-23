@@ -81,7 +81,7 @@ public class GitHubRepository {
                     .body(body);
 
             ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-            if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
+            if (responseEntity.getStatusCode() != HttpStatus.CREATED) {
                 isAllCreated = false;
                 log.warn(String.format("The request is failed, path:%s, position:%d.", suggestion.getPath(), suggestion.getLine()));
             }

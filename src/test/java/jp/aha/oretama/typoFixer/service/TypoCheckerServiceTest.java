@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 public class TypoCheckerServiceTest {
 
-    TypoCheckerService service = new TypoCheckerService(new JLanguageTool(new AmericanEnglish()), null);
+    private TypoCheckerService service = new TypoCheckerService(new JLanguageTool(new AmericanEnglish()), null);
 
     private String rawDiff = "diff --git a/README.md b/README.md\n" +
             "index f247396..93a9c32 100644\n" +
@@ -50,6 +50,29 @@ public class TypoCheckerServiceTest {
             "+This is typooo.\n" +
             "+This is alsonn typo.";
 
+    private String rawDiff3 = "diff --git a/README.md b/README.md\n" +
+            "index 8cacdfa..e41e46f 100644\n" +
+            "--- a/README.md\n" +
+            "+++ b/README.md\n" +
+            "@@ -1,4 +1,5 @@\n" +
+            " # test\n" +
+            " \n" +
+            "-This is test repository.\n" +
+            "-Ignore this repostiosy.\n" +
+            "+This is test for typo fixer.\n" +
+            "+This is typooo.\n" +
+            "+This is alsonn typo.";
+
+    private String rawDiff4 = "diff --git a/README.md b/README.md\n" +
+            "index 3398d7a..660bb3a 100644\n" +
+            "--- a/README.md\n" +
+            "+++ b/README.md\n" +
+            "@@ -1,2 +1 @@\n" +
+            "-# test\n" +
+            "-aaa\n" +
+            "+# test3\n" +
+            "\\ No newline at end of file";
+
     @Test
     public void getSuggestionsFromRawDiff() {
         List<Diff> result = service.getAdded(rawDiff);
@@ -57,7 +80,7 @@ public class TypoCheckerServiceTest {
         assertEquals(1, result.size());
         Diff diff = result.get(0);
         assertEquals("README.md", diff.getPath());
-        assertEquals("Nobody reads", diff.getAdded().get(0));
+        assertEquals("Nobody reads", diff.getAdded().get(2));
     }
 
     @Test
@@ -72,7 +95,28 @@ public class TypoCheckerServiceTest {
 
         Diff diff1 = result.get(1);
         assertEquals("README.md", diff1.getPath());
-        assertEquals("# test", diff1.getAdded().get(1));
+        assertEquals("This is test for typo fixer.", diff1.getAdded().get(5));
     }
 
+    @Test
+    public void getSuggestionsFromRawDiff3() {
+        List<Diff> result = service.getAdded(rawDiff3);
+
+        assertEquals(1, result.size());
+
+        Diff diff0 = result.get(0);
+        assertEquals("README.md", diff0.getPath());
+        assertEquals("This is test for typo fixer.", diff0.getAdded().get(5));
+    }
+
+    @Test
+    public void getSuggestionsFromRawDiff4() {
+        List<Diff> result = service.getAdded(rawDiff4);
+
+        assertEquals(1, result.size());
+
+        Diff diff0 = result.get(0);
+        assertEquals("README.md", diff0.getPath());
+        assertEquals("# test3", diff0.getAdded().get(3));
+    }
 }
