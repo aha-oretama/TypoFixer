@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoFixer;
+package jp.aha.oretama.typoFixer.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoFixer.configuration.TestRestTemplateConfiguration;
