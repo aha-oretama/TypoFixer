@@ -1,22 +1,20 @@
 package jp.aha.oretama.typoChecker.parser;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
-
 /**
  * @author aha-oretama
  */
+@Ignore("TODO, Not implement")
 public class JavaParserTest {
 
     @Test

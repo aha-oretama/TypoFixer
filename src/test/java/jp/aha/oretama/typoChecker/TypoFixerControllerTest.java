@@ -13,6 +13,7 @@ import jp.aha.oretama.typoChecker.service.TypoCheckerService;
 import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(TypoFixerController.class)
 @Slf4j
+@Ignore("This controller will be changed much.")
 public class TypoFixerControllerTest {
 
     @Autowired

@@ -2,6 +2,7 @@ package jp.aha.oretama.typoChecker.model;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,5 +10,5 @@ import java.util.List;
  */
 @Data
 public class Config {
-    public List<String> extensions;
+    private List<String> extensions = new ArrayList<>();
 }

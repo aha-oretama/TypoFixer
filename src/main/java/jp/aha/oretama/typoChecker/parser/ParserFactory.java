@@ -1,8 +1,5 @@
 package jp.aha.oretama.typoChecker.parser;
 
-import jp.aha.oretama.typoChecker.model.Diff;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,10 +8,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ParserFactory {
 
-    public Parser create(String path, String content) {
-        String extension = FilenameUtils.getExtension(path);
+    public Parser create(String extension, String content) {
         switch (extension) {
-            case "java":
+            case ".java":
                 return new JavaParser(content);
             default:
                 return new NoopParser(content);

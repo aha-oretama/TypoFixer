@@ -1,31 +1,30 @@
 package jp.aha.oretama.typoChecker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoChecker.model.*;
-import jp.aha.oretama.typoChecker.parser.Parser;
-import jp.aha.oretama.typoChecker.parser.ParserFactory;
 import jp.aha.oretama.typoChecker.repository.GitHubRepository;
+import jp.aha.oretama.typoChecker.service.FilterService;
 import jp.aha.oretama.typoChecker.service.TypoCheckerService;
 import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author aha-oretama
  */
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class TypoFixerController {
 
     private final TypoCheckerService checkerService;
     private final TypoModifierService modifierService;
+    private final FilterService filterService;
     private final GitHubRepository repository;
-    private final ParserFactory factory;
-    private final ObjectMapper mapper;
 
     private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
     private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
@@ -64,31 +63,23 @@ public class TypoFixerController {
                 String rawDiff = repository.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
                 List<Diff> added = checkerService.getAdded(rawDiff);
 
-                // Get an option file and filter by file extensions.
                 Event.Head head = event.getPullRequest().getHead();
                 String contentsUrl = head.getRepo().getContentsUrl();
                 String ref = head.getRef();
-                Optional<String> configContent = repository.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
-                configContent.ifPresent(s -> {
-                    Config config = mapper.convertValue(s, Config.class);
-                    added.removeIf(diff -> !config.extensions.contains("." + diff.getExtension()));
-                });
 
-                // Execute AST.
+                // Get a configuration file
+                Optional<String> configContent = repository.getRawContent(contentsUrl, "typo-fixer.json", ref, token.getToken());
+                configContent.ifPresent(filterService::setConfig);
+                filterService.filtering(added);
+
+                // Get raw contents for each file.
                 for (Diff diff : added) {
                     String content = repository.getRawContent(contentsUrl, diff.getPath(), ref, token.getToken())
                             .orElseThrow(() -> new RuntimeException("Getting contents fails. It may be because getting diffs is not correct."));
-                    Parser parser = factory.create(diff.getPath(), content);
-                    parser = parser.parseLines(new ArrayList<>(diff.getAdded().keySet()));
-                    List<Integer> targetLines = parser.getTargetLines();
-
-                    List<Integer> nonTargetLines = diff.getAdded().keySet().stream()
-                            .filter(integer -> !targetLines.contains(integer)).collect(Collectors.toList());
-
-                    for (Integer line : nonTargetLines) {
-                        diff.getAdded().remove(line);
-                    }
+                    diff.setContent(content);
                 }
+                filterService.setParse();
+                filterService.filtering(added);
 
                 // Check typo.
                 List<String> dictionary = checkerService.getRepositoryDictionary(event, token);
