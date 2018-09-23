@@ -1,7 +1,6 @@
 package jp.aha.oretama.typoFixer.service;
 
 import jp.aha.oretama.typoFixer.model.Diff;
-import jp.aha.oretama.typoFixer.service.TypoCheckerService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.languagetool.JLanguageTool;

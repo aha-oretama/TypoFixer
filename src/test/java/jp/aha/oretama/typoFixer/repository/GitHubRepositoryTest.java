@@ -3,8 +3,6 @@ package jp.aha.oretama.typoFixer.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoFixer.configuration.TestRestTemplateConfiguration;
 import jp.aha.oretama.typoFixer.model.Token;
-import jp.aha.oretama.typoFixer.repository.EncryptionRepository;
-import jp.aha.oretama.typoFixer.repository.GitHubRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

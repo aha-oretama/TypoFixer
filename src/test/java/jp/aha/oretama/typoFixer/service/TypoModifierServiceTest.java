@@ -2,7 +2,6 @@ package jp.aha.oretama.typoFixer.service;
 
 import jp.aha.oretama.typoFixer.model.Event;
 import jp.aha.oretama.typoFixer.model.Modification;
-import jp.aha.oretama.typoFixer.service.TypoModifierService;
 import org.junit.Before;
 import org.junit.Test;
 
