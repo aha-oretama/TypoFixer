@@ -47,7 +47,7 @@ jobs:
         path: target/surefire-reports
 
     - store_artifacts: # store the jar as an artifact
-        path: target/TypoFixer-0.1.0.jar
+        path: target/TypoFixer-0.0.3.jar
 
   deploy-prod:
     working_directory: ~/work
