@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker;
+package jp.aha.oretama.typoChecker.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -5,6 +5,8 @@ import jp.aha.oretama.typoChecker.model.*;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
 import jp.aha.oretama.typoChecker.repository.GitHubRepository;
+import jp.aha.oretama.typoChecker.service.TypoCheckerService;
+import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

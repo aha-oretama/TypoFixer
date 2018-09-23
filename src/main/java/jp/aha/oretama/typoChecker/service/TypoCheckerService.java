@@ -1,11 +1,11 @@
-package jp.aha.oretama.typoChecker;
+package jp.aha.oretama.typoChecker.service;
 
 import jp.aha.oretama.typoChecker.model.Diff;
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Suggestion;
 import jp.aha.oretama.typoChecker.model.Token;
 import jp.aha.oretama.typoChecker.repository.GitHubRepository;
-import jp.aha.oretama.typoChecker.utils.extenstions.FuntionalExtension;
+import jp.aha.oretama.typoChecker.util.extenstion.FuntionalExtension;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;

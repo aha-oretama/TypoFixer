@@ -2,7 +2,7 @@ package jp.aha.oretama.typoChecker.repository;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import jp.aha.oretama.typoChecker.utils.EncryptionUtil;
+import jp.aha.oretama.typoChecker.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

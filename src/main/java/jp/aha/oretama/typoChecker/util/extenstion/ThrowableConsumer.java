@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker.utils.extenstions;
+package jp.aha.oretama.typoChecker.util.extenstion;
 
 /**
  * @author aha-oretama

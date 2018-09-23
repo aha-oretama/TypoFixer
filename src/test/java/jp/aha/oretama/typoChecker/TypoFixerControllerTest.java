@@ -9,6 +9,8 @@ import jp.aha.oretama.typoChecker.parser.NoopParser;
 import jp.aha.oretama.typoChecker.parser.Parser;
 import jp.aha.oretama.typoChecker.parser.ParserFactory;
 import jp.aha.oretama.typoChecker.repository.GitHubRepository;
+import jp.aha.oretama.typoChecker.service.TypoCheckerService;
+import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;

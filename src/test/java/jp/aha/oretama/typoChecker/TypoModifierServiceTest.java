@@ -2,6 +2,7 @@ package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Modification;
+import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import org.junit.Before;
 import org.junit.Test;
 

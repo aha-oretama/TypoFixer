@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker.utils.extenstions;
+package jp.aha.oretama.typoChecker.util.extenstion;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

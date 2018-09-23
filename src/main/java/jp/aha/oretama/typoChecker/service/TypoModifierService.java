@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker;
+package jp.aha.oretama.typoChecker.service;
 
 import jp.aha.oretama.typoChecker.model.Event;
 import jp.aha.oretama.typoChecker.model.Modification;

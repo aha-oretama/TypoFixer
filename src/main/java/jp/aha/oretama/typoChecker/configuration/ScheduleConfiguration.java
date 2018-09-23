@@ -1,6 +1,6 @@
 package jp.aha.oretama.typoChecker.configuration;
 
-import jp.aha.oretama.typoChecker.BaseDictionaryService;
+import jp.aha.oretama.typoChecker.service.BaseDictionaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;

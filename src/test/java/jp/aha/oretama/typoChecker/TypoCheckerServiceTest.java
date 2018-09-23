@@ -1,6 +1,7 @@
 package jp.aha.oretama.typoChecker;
 
 import jp.aha.oretama.typoChecker.model.Diff;
+import jp.aha.oretama.typoChecker.service.TypoCheckerService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.languagetool.JLanguageTool;

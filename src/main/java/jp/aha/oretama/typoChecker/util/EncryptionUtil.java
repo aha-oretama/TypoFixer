@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker.utils;
+package jp.aha.oretama.typoChecker.util;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
