@@ -4,7 +4,6 @@ import jp.aha.oretama.typoFixer.model.Diff;
 import jp.aha.oretama.typoFixer.parser.Parser;
 import jp.aha.oretama.typoFixer.parser.ParserFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,15 +23,14 @@ public class ParseFilter implements Filter {
         for (Diff diff : added) {
             Parser parser = factory.create(diff.getExtension(), diff.getContent());
             List<Integer> targetLines = parser
-                    .parseLines(new ArrayList<>(diff.getAdded().keySet()))
+                    .parseLines(diff.getAddLines().stream().map(Diff.AddLine::getFileLine).collect(Collectors.toList()))
                     .getTargetLines();
 
-            List<Integer> nonTargetLines = diff.getAdded().keySet().stream()
+            List<Integer> nonTargetLines = diff.getAddLines().stream().map(Diff.AddLine::getFileLine)
                     .filter(integer -> !targetLines.contains(integer)).collect(Collectors.toList());
 
-            for (Integer line : nonTargetLines) {
-                diff.getAdded().remove(line);
-            }
+
+            diff.getAddLines().removeIf(addLine -> nonTargetLines.contains(addLine.getFileLine()));
         }
     }
 }

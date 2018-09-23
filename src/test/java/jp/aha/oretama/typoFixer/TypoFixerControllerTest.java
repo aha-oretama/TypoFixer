@@ -65,11 +65,9 @@ public class TypoFixerControllerTest {
     private String tokenKey = "tokenKey";
     private String rawDiff = "This is raw diff.";
     private String path = "src/main/java/test.java";
-    private List<Diff> added = Collections.singletonList(new Diff(path, new HashMap<Integer, String>() {
-        {
-            put(99, "this is sentence");
-        }
-    }));
+    private List<Diff> added = Collections.singletonList(new Diff(path, Collections.singletonList(new Diff.AddLine(
+            99, 99, "this is sentence"))));
+
     private String content = "Content.\nThis is raw diff.";
     private List<Suggestion> suggestions = new ArrayList<>();
 
@@ -107,7 +105,7 @@ public class TypoFixerControllerTest {
         doReturn(Optional.of(content)).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
         doReturn(parser).when(factory).create(path, content);
 
-        suggestions.add(new Suggestion(path, "this is sentence", 99, null));
+        suggestions.add(new Suggestion(path, "this is sentence", 99, 99, null));
         doReturn(suggestions).when(checkerService).getSuggestions(added);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }

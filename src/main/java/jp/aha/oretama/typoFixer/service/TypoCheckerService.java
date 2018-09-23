@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,31 +41,39 @@ public class TypoCheckerService {
         List<String> lines = Arrays.asList(rawDiff.split("\n"));
 
         List<Diff> diffs = new ArrayList<>();
-        int lineNumber = 0;
+        // fileLine is committed file's line number.
+        int fileLine = 0;
+        // diffLine is line number which GitHub displays in diff page and include all of +, - , not change lines.
+        int diffLine = 0;
 
         for (String line : lines) {
             // Get Path.
             Matcher pathMatcher = PATH_PATTERN.matcher(line);
             if (pathMatcher.find() && pathMatcher.groupCount() >= 1) {
-                Diff diff = new Diff(pathMatcher.group(1), new HashMap<>());
+                Diff diff = new Diff(pathMatcher.group(1), new ArrayList<>());
                 diffs.add(diff);
                 continue;
             }
 
-            // Get start line number.
+            // Get start line number. Initialize line number.
             Matcher lineNumberMatcher = LINE_NUMBER_PATTER.matcher(line);
             if (lineNumberMatcher.find() && lineNumberMatcher.groupCount() >= 1) {
                 // Last diff object needs because line number count up.
-                lineNumber = Integer.valueOf(lineNumberMatcher.group(1));
+                fileLine = Integer.valueOf(lineNumberMatcher.group(1));
+                diffLine = Integer.valueOf(lineNumberMatcher.group(1));
                 continue;
             }
 
             if (line.startsWith("+")) {
                 // Last diff object needs.
                 // Remove first character because first character represents sign.
-                diffs.get(diffs.size() - 1).getAdded().put(lineNumber, line.substring(1, line.length()));
+                diffs.get(diffs.size() - 1).getAddLines().add(new Diff.AddLine(fileLine, diffLine, line.substring(1)));
             }
-            lineNumber++;
+
+            if (line.startsWith("+") || line.startsWith(" ")) {
+                fileLine++;
+            }
+            diffLine++;
         }
 
         return diffs;
@@ -98,12 +108,12 @@ public class TypoCheckerService {
     private List<Suggestion> spellCheck(final List<Diff> added) throws IOException {
         List<Suggestion> suggestions = new ArrayList<>();
         for (Diff diff : added) {
-            Map<Integer, String> lineAndStr = diff.getAdded();
-            for (Integer line : lineAndStr.keySet()) {
-                String text = lineAndStr.get(line);
+            List<Diff.AddLine> addLines = diff.getAddLines();
+            for (Diff.AddLine line : addLines) {
+                String text = line.getLineContent();
                 List<RuleMatch> matches = jLanguageTool.check(text);
                 for (RuleMatch match : matches) {
-                    suggestions.add(new Suggestion(diff.getPath(), text, line, match));
+                    suggestions.add(new Suggestion(diff.getPath(), text, line.getFileLine(), line.getDiffLine(), match));
                 }
             }
         }

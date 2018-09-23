@@ -72,7 +72,7 @@ public class GitHubRepository {
             body.put("body", suggestion.createMessage());
             body.put("commit_id", event.getPullRequest().getHead().getSha());
             body.put("path", suggestion.getPath());
-            body.put("position", suggestion.getLine());
+            body.put("position", suggestion.getDiffLine());
 
             RequestEntity requestEntity = RequestEntity
                     .post(URI.create(contentsUrl))
@@ -83,7 +83,7 @@ public class GitHubRepository {
             ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
             if (responseEntity.getStatusCode() != HttpStatus.CREATED) {
                 isAllCreated = false;
-                log.warn(String.format("The request is failed, path:%s, position:%d.", suggestion.getPath(), suggestion.getLine()));
+                log.warn(String.format("The request is failed, path:%s, position:%d.", suggestion.getPath(), suggestion.getDiffLine()));
             }
         }
 
