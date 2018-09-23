@@ -1,4 +1,4 @@
-package jp.aha.oretama.typoChecker;
+package jp.aha.oretama.typoChecker.model;
 
 import lombok.Data;
 
@@ -9,5 +9,5 @@ import java.util.List;
  */
 @Data
 public class Config {
-    List<String> extensions;
+    public List<String> extensions;
 }

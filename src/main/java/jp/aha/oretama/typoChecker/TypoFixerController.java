@@ -9,7 +9,6 @@ import jp.aha.oretama.typoChecker.service.TypoCheckerService;
 import jp.aha.oretama.typoChecker.service.TypoModifierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.*;
