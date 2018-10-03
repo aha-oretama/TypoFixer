@@ -1,9 +1,6 @@
 package jp.aha.oretama.typoFixer.repository;
 
-import jp.aha.oretama.typoFixer.model.Event;
-import jp.aha.oretama.typoFixer.model.Modification;
-import jp.aha.oretama.typoFixer.model.Suggestion;
-import jp.aha.oretama.typoFixer.model.Token;
+import jp.aha.oretama.typoFixer.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -231,4 +228,20 @@ public class GitHubRepository {
         return exchange.getBody();
     }
 
+    public boolean updateStatus(String url, Status state, String targetUrl, String description, String context, String token) {
+        Map<String, String> body = new HashMap<>();
+        body.put("state", state.getStatus());
+        body.put("target_url", targetUrl);
+        body.put("description", description);
+        body.put("context", context);
+
+        RequestEntity requestEntity = RequestEntity
+                .post(URI.create(url))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .body(body);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        return responseEntity.getStatusCode() == HttpStatus.CREATED;
+    }
 }

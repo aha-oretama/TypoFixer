@@ -59,6 +59,9 @@ public class TypoFixerController {
                 // To use GitHub's api, get token.
                 token = repository.getAuthToken(event.getInstallation().getId());
 
+                // Update status to pending.
+                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Pending, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
+
                 // Get added lines.
                 String rawDiff = repository.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
                 List<Diff> added = checkerService.getAdded(rawDiff);
@@ -88,7 +91,16 @@ public class TypoFixerController {
 
                 // Create comments of pull request.
                 boolean isCreated = repository.postComment(event, suggestions, token);
-                response.put("message", isCreated ? "Comment succeeded." : "Comment failed.");
+
+                if (isCreated) {
+                    response.put("message", "Comment succeeded.");
+                    // Update status to success.
+                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Success, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
+                } else {
+                    response.put("message", "Comment failed.");
+                    // Update status to error.
+                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Error, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
+                }
                 break;
             case COMMENT_EVENT_TYPE:
                 // Filter events except comments.
@@ -99,13 +111,21 @@ public class TypoFixerController {
 
                 // To use GitHub's api, get token.
                 token = repository.getAuthToken(event.getInstallation().getId());
+
+                // Update status to pending.
+                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Pending, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
+
                 Optional<Modification> modification = modifierService.getModification(event);
                 if (modification.isPresent()) {
                     boolean isModified = repository.pushFromComment(event, modification.get(), token);
-                    response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
+                    if (isModified) {
+                        response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
+                    }
                 } else {
                     response.put("message", "Not target format.");
                 }
+                // Update status to success.
+                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Success, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
                 break;
             default:
                 response.put("message", "Event is not from GitHub or not target event.");
