@@ -6,7 +6,7 @@ import jp.aha.oretama.typoFixer.model.Suggestion;
 import jp.aha.oretama.typoFixer.model.Token;
 import jp.aha.oretama.typoFixer.repository.GitHubRepository;
 import jp.aha.oretama.typoFixer.util.extenstion.FuntionalExtension;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.languagetool.JLanguageTool;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 /**
  * @author aha-oretama
  */
-@Data
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class TypoCheckerService {
