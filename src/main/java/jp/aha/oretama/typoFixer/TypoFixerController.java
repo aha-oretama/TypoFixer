@@ -98,7 +98,7 @@ public class TypoFixerController {
                     repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Success, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
                 } else {
                     response.put("message", "Comment failed.");
-                    // Update status to error.
+                    // Update status to failure.
                     repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Failure, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
                 }
                 break;
