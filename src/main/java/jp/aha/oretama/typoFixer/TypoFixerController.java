@@ -99,7 +99,7 @@ public class TypoFixerController {
                 } else {
                     response.put("message", "Comment failed.");
                     // Update status to error.
-                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Error, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
+                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Failure, "https://github.com/apps/typofixer", "TypoFixer points out your typos instead of reviewers.", "TypoFixer", token.getToken());
                 }
                 break;
             case COMMENT_EVENT_TYPE:
@@ -134,5 +134,4 @@ public class TypoFixerController {
 
         return response;
     }
-
 }
