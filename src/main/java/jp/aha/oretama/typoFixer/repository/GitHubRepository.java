@@ -26,6 +26,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitHubRepository {
 
+    public static final String TYPOFIXER_URL = "https://github.com/apps/typofixer";
+    public static final String STATUS_DISCRIPTION = "TypoFixer points out your typos instead of reviewers.";
+    public static final String CONTENT = "TypoFixer";
+
     private final RestTemplate restTemplate;
     private final EncryptionRepository encryptionRepository;
 
@@ -228,12 +232,12 @@ public class GitHubRepository {
         return exchange.getBody();
     }
 
-    public boolean updateStatus(String url, Status state, String targetUrl, String description, String context, String token) {
+    public boolean updateStatus(String url, Status state, String token) {
         Map<String, String> body = new HashMap<>();
         body.put("state", state.getStatus());
-        body.put("target_url", targetUrl);
-        body.put("description", description);
-        body.put("context", context);
+        body.put("target_url", TYPOFIXER_URL);
+        body.put("description", STATUS_DISCRIPTION);
+        body.put("context", CONTENT);
 
         RequestEntity requestEntity = RequestEntity
                 .post(URI.create(url))

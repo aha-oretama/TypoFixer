@@ -2,6 +2,7 @@ package jp.aha.oretama.typoFixer.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoFixer.configuration.TestRestTemplateConfiguration;
+import jp.aha.oretama.typoFixer.model.Status;
 import jp.aha.oretama.typoFixer.model.Token;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,15 +15,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withNoContent;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 /**
  * @author aha-oretama
@@ -128,5 +128,22 @@ public class GitHubRepositoryTest {
 
         String rawDiff = repository.getRawDiff(diffUrl, token);
         assertEquals(content, rawDiff);
+    }
+
+    @Test
+    public void updateStatus() {
+        String token = "1234567890";
+        String url = "https://api.github.com/repos/octocat/Hello-World/statuses/6dcb09b5b57875f334f61aebed695e2e4193db5e";
+
+        this.server
+                .expect(requestTo(url))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("{\"state\": \"pending\" ,\"target_url\": \"https://github.com/apps/typofixer\",\"description\":\"TypoFixer points out your typos instead of reviewers.\",\"context\":\"TypoFixer\" }"))
+                .andExpect(header("Authorization", "token 1234567890"))
+                .andExpect(header("Accept", "application/vnd.github.machine-man-preview+json"))
+                .andRespond(withCreatedEntity(URI.create(url)));
+
+        boolean result = this.repository.updateStatus(url, Status.Pending, token);
+        assertTrue(result);
     }
 }
