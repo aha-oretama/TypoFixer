@@ -45,6 +45,8 @@ public class TypoCheckerService {
         int fileLine = 0;
         // diffLine is line number which GitHub displays in diff page and include all of +, - , not change lines.
         int diffLine = 0;
+        // diffLine is increasing in the file. But diffLine is reset when the file is changed.
+        boolean resetDiffLine = true;
 
         for (String line : lines) {
             // Get Path.
@@ -52,6 +54,7 @@ public class TypoCheckerService {
             if (pathMatcher.find() && pathMatcher.groupCount() >= 1) {
                 Diff diff = new Diff(pathMatcher.group(1), new ArrayList<>());
                 diffs.add(diff);
+                resetDiffLine = true;
                 continue;
             }
 
@@ -60,7 +63,12 @@ public class TypoCheckerService {
             if (lineNumberMatcher.find() && lineNumberMatcher.groupCount() >= 1) {
                 // Last diff object needs because line number count up.
                 fileLine = Integer.valueOf(lineNumberMatcher.group(1));
-                diffLine = Integer.valueOf(lineNumberMatcher.group(1));
+                if (resetDiffLine) {
+                    diffLine = 1;
+                    resetDiffLine = false;
+                } else {
+                    diffLine++;
+                }
                 continue;
             }
 
