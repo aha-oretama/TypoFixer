@@ -248,4 +248,22 @@ public class GitHubRepository {
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         return responseEntity.getStatusCode() == HttpStatus.CREATED;
     }
+
+    public boolean submitReview(String url, String sha, Review review, String token) {
+        Map<String, String> body = new HashMap<>();
+        body.put("commit_id", sha);
+        if (review.equals(Review.REQUEST_CHANGES) || review.equals(Review.COMMENT)) {
+            body.put("body", "You should fix typo commented by TypoFixer.");
+        }
+        body.put("event", review.toString());
+
+        RequestEntity requestEntity = RequestEntity
+                .post(URI.create(url))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .body(body);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        return responseEntity.getStatusCode() == HttpStatus.OK;
+    }
 }

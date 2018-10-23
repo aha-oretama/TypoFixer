@@ -49,6 +49,7 @@ public class TypoFixerController {
         HashMap<String, String> response = new HashMap<>();
 
         Token token;
+        String statusesUrl;
         switch (eventType) {
             case PULL_REQUEST_EVENT_TYPE:
                 // Filter events except creating or updating a pull request.
@@ -59,8 +60,12 @@ public class TypoFixerController {
                 // To use GitHub's api, get token.
                 token = repository.getAuthToken(event.getInstallation().getId());
 
+                statusesUrl = event.getPullRequest().getStatusesUrl();
+                String reviewUrl = event.getPullRequest().getUrl() + "/reviews";
+                String sha = event.getPullRequest().getHead().getSha();
                 // Update status to pending.
-                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Pending, token.getToken());
+                repository.updateStatus(statusesUrl, Status.Pending, token.getToken());
+                repository.submitReview(reviewUrl, sha, Review.PENDING, token.getToken());
 
                 // Get added lines.
                 String rawDiff = repository.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
@@ -95,11 +100,13 @@ public class TypoFixerController {
                 if (isCreated) {
                     response.put("message", "Comment succeeded.");
                     // Update status to success.
-                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Success, token.getToken());
+                    repository.updateStatus(statusesUrl, Status.Success, token.getToken());
+                    repository.submitReview(reviewUrl, sha, Review.APPROVE, token.getToken());
                 } else {
                     response.put("message", "Comment failed.");
                     // Update status to failure.
-                    repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Failure, token.getToken());
+                    repository.updateStatus(statusesUrl, Status.Failure, token.getToken());
+                    repository.submitReview(reviewUrl, sha, Review.REQUEST_CHANGES, token.getToken());
                 }
                 break;
             case COMMENT_EVENT_TYPE:
@@ -113,7 +120,8 @@ public class TypoFixerController {
                 token = repository.getAuthToken(event.getInstallation().getId());
 
                 // Update status to pending.
-                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Pending, token.getToken());
+                statusesUrl = event.getPullRequest().getStatusesUrl();
+                repository.updateStatus(statusesUrl, Status.Pending, token.getToken());
 
                 Optional<Modification> modification = modifierService.getModification(event);
                 if (modification.isPresent()) {
@@ -125,7 +133,7 @@ public class TypoFixerController {
                     response.put("message", "Not target format.");
                 }
                 // Update status to success.
-                repository.updateStatus(event.getPullRequest().getStatusesUrl(), Status.Success, token.getToken());
+                repository.updateStatus(statusesUrl, Status.Success, token.getToken());
                 break;
             default:
                 response.put("message", "Event is not from GitHub or not target event.");
