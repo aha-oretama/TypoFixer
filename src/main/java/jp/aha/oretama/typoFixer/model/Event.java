@@ -26,6 +26,8 @@ public class Event {
         private String url;
         @JsonProperty("diff_url")
         private String diffUrl;
+        @JsonProperty("statuses_url")
+        private String statusesUrl;
         @JsonProperty("review_comments_url")
         private String reviewCommentsUrl;
         private Base base;

@@ -1,9 +1,6 @@
 package jp.aha.oretama.typoFixer.repository;
 
-import jp.aha.oretama.typoFixer.model.Event;
-import jp.aha.oretama.typoFixer.model.Modification;
-import jp.aha.oretama.typoFixer.model.Suggestion;
-import jp.aha.oretama.typoFixer.model.Token;
+import jp.aha.oretama.typoFixer.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -28,6 +25,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class GitHubRepository {
+
+    public static final String TYPOFIXER_URL = "https://github.com/apps/typofixer";
+    public static final String STATUS_DISCRIPTION = "TypoFixer points out your typos instead of reviewers.";
+    public static final String CONTENT = "TypoFixer";
 
     private final RestTemplate restTemplate;
     private final EncryptionRepository encryptionRepository;
@@ -231,4 +232,20 @@ public class GitHubRepository {
         return exchange.getBody();
     }
 
+    public boolean updateStatus(String url, Status state, String token) {
+        Map<String, String> body = new HashMap<>();
+        body.put("state", state.getStatus());
+        body.put("target_url", TYPOFIXER_URL);
+        body.put("description", STATUS_DISCRIPTION);
+        body.put("context", CONTENT);
+
+        RequestEntity requestEntity = RequestEntity
+                .post(URI.create(url))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.machine-man-preview+json")
+                .body(body);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        return responseEntity.getStatusCode() == HttpStatus.CREATED;
+    }
 }

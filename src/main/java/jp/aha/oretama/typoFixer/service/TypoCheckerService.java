@@ -6,7 +6,7 @@ import jp.aha.oretama.typoFixer.model.Suggestion;
 import jp.aha.oretama.typoFixer.model.Token;
 import jp.aha.oretama.typoFixer.repository.GitHubRepository;
 import jp.aha.oretama.typoFixer.util.extenstion.FuntionalExtension;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.languagetool.JLanguageTool;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 /**
  * @author aha-oretama
  */
-@Data
+@RequiredArgsConstructor
 @Service
 @Slf4j
 public class TypoCheckerService {
@@ -34,8 +34,8 @@ public class TypoCheckerService {
     private final JLanguageTool jLanguageTool;
     private final GitHubRepository repository;
 
-    private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
-    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,?[0-9]* \\+([0-9]+),?[0-9]* @@");
+    private static final Pattern PATH_PATTERN = Pattern.compile("^\\+\\+\\+ b/(.+)$");
+    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("^@@ -[0-9]+,?[0-9]* \\+([0-9]+),?[0-9]* @@");
 
     public List<Diff> getAdded(String rawDiff) {
         List<String> lines = Arrays.asList(rawDiff.split("\n"));
@@ -45,6 +45,8 @@ public class TypoCheckerService {
         int fileLine = 0;
         // diffLine is line number which GitHub displays in diff page and include all of +, - , not change lines.
         int diffLine = 0;
+        // diffLine is increasing in the file. But diffLine is reset when the file is changed.
+        boolean resetDiffLine = true;
 
         for (String line : lines) {
             // Get Path.
@@ -52,6 +54,7 @@ public class TypoCheckerService {
             if (pathMatcher.find() && pathMatcher.groupCount() >= 1) {
                 Diff diff = new Diff(pathMatcher.group(1), new ArrayList<>());
                 diffs.add(diff);
+                resetDiffLine = true;
                 continue;
             }
 
@@ -60,7 +63,12 @@ public class TypoCheckerService {
             if (lineNumberMatcher.find() && lineNumberMatcher.groupCount() >= 1) {
                 // Last diff object needs because line number count up.
                 fileLine = Integer.valueOf(lineNumberMatcher.group(1));
-                diffLine = Integer.valueOf(lineNumberMatcher.group(1));
+                if (resetDiffLine) {
+                    diffLine = 1;
+                    resetDiffLine = false;
+                } else {
+                    diffLine++;
+                }
                 continue;
             }
 
