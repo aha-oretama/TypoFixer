@@ -34,8 +34,8 @@ public class TypoCheckerService {
     private final JLanguageTool jLanguageTool;
     private final GitHubRepository repository;
 
-    private static final Pattern PATH_PATTERN = Pattern.compile("\\+\\+\\+ b/(.+)");
-    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("@@ -[0-9]+,?[0-9]* \\+([0-9]+),?[0-9]* @@");
+    private static final Pattern PATH_PATTERN = Pattern.compile("^\\+\\+\\+ b/(.+)$");
+    private static final Pattern LINE_NUMBER_PATTER = Pattern.compile("^@@ -[0-9]+,?[0-9]* \\+([0-9]+),?[0-9]* @@");
 
     public List<Diff> getAdded(String rawDiff) {
         List<String> lines = Arrays.asList(rawDiff.split("\n"));
