@@ -1,5 +1,6 @@
 package jp.aha.oretama.typoFixer.language;
 
+import org.languagetool.UserConfig;
 import org.languagetool.language.English;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.en.MorfologikAmericanSpellerRule;
@@ -36,13 +37,11 @@ public class CodingEnglish extends English {
         return this.wordTokenizer;
     }
 
-
     @Override
-    public List<Rule> getRelevantRules(ResourceBundle messages) throws IOException {
+    public List<Rule> getRelevantRules(ResourceBundle messages, UserConfig userConfig) throws IOException {
         List<Rule> rules = new ArrayList<>();
-        rules.addAll(super.getRelevantRules(messages));
+        rules.addAll(super.getRelevantRules(messages, userConfig));
         rules.add(new MorfologikAmericanSpellerRule(messages, this));
         return rules;
     }
-
 }

@@ -48,7 +48,7 @@
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-all</artifactId>
-            <version>4.0</version>
+            <version>4.3</version>
         </dependency>
         <!-- Java Parser -->
         <dependency>

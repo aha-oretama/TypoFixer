@@ -30,7 +30,9 @@ public class TypoCheckerConfiguration {
         // Set accept phrase
         for (Rule rule : jLanguageTool.getAllActiveRules()) {
             if (rule instanceof SpellingCheckRule) {
-                ((SpellingCheckRule) rule).addIgnoreTokens(dictionaryService.getDictionaries());
+                SpellingCheckRule spellingCheckRule = (SpellingCheckRule) rule;
+                spellingCheckRule.setConvertsCase(true);
+                spellingCheckRule.addIgnoreTokens(dictionaryService.getDictionaries());
             }
         }
         return jLanguageTool;
