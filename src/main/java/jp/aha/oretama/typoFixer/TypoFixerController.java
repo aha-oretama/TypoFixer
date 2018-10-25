@@ -61,11 +61,8 @@ public class TypoFixerController {
                 token = repository.getAuthToken(event.getInstallation().getId());
 
                 statusesUrl = event.getPullRequest().getStatusesUrl();
-                String reviewUrl = event.getPullRequest().getUrl() + "/reviews";
-                String sha = event.getPullRequest().getHead().getSha();
                 // Update status to pending.
                 repository.updateStatus(statusesUrl, Status.Pending, token.getToken());
-                repository.submitReview(reviewUrl, sha, Review.PENDING, token.getToken());
 
                 // Get added lines.
                 String rawDiff = repository.getRawDiff(event.getPullRequest().getDiffUrl(), token.getToken());
@@ -101,12 +98,10 @@ public class TypoFixerController {
                     response.put("message", "Comment succeeded.");
                     // Update status to success.
                     repository.updateStatus(statusesUrl, Status.Success, token.getToken());
-                    repository.submitReview(reviewUrl, sha, Review.APPROVE, token.getToken());
                 } else {
                     response.put("message", "Comment failed.");
                     // Update status to failure.
                     repository.updateStatus(statusesUrl, Status.Failure, token.getToken());
-                    repository.submitReview(reviewUrl, sha, Review.REQUEST_CHANGES, token.getToken());
                 }
                 break;
             case COMMENT_EVENT_TYPE:
