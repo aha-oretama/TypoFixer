@@ -7,7 +7,6 @@ import jp.aha.oretama.typoFixer.service.filter.ParseFilter;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -34,7 +33,7 @@ public class FilterServiceTest {
         filterService.setParse();
 
         // Act
-        List<Filter> filters = getPrivateField(filterService, "filters");
+        List<Filter> filters = filterService.getFilters();
 
         // Assert
         assertEquals(1, filters.size());
@@ -47,7 +46,7 @@ public class FilterServiceTest {
         filterService.setConfig(empty);
 
         // Act
-        List<Filter> filters = getPrivateField(filterService, "filters");
+        List<Filter> filters = filterService.getFilters();
 
         // Assert
         assertTrue(filters.isEmpty());
@@ -59,7 +58,7 @@ public class FilterServiceTest {
         filterService.setConfig(emptyJson);
 
         // Act
-        List<Filter> filters = getPrivateField(filterService, "filters");
+        List<Filter> filters = filterService.getFilters();
 
         // Assert
         assertTrue(filters.isEmpty());
@@ -71,7 +70,7 @@ public class FilterServiceTest {
         filterService.setConfig(emptyArrayJson);
 
         // Act
-        List<Filter> filters = getPrivateField(filterService, "filters");
+        List<Filter> filters = filterService.getFilters();
 
         // Assert
         assertTrue(filters.isEmpty());
@@ -84,17 +83,10 @@ public class FilterServiceTest {
         filterService.setConfig(extensionJson);
 
         // Act
-        List<Filter> filters = getPrivateField(filterService, "filters");
+        List<Filter> filters = filterService.getFilters();
 
         // Assert
         assertEquals(1, filters.size());
         assertTrue(filters.get(0) instanceof ExtensionFilter);
-    }
-
-    private List<Filter> getPrivateField(Object targetObject, String fieldName) throws NoSuchFieldException, IllegalAccessException {
-        Class c = targetObject.getClass();
-        Field field = c.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return (List<Filter>) field.get(targetObject);
     }
 }

@@ -6,6 +6,7 @@ import jp.aha.oretama.typoFixer.model.Diff;
 import jp.aha.oretama.typoFixer.service.filter.ExtensionFilter;
 import jp.aha.oretama.typoFixer.service.filter.Filter;
 import jp.aha.oretama.typoFixer.service.filter.ParseFilter;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class FilterService {
 
     private final ObjectMapper mapper;
 
+    @Getter
     private LinkedList<Filter> filters = new LinkedList<>();
 
     public FilterService setParse() {
