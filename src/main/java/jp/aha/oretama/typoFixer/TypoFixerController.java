@@ -110,6 +110,12 @@ public class TypoFixerController {
                     response.put("message", "This event action is not a target.");
                     break;
                 }
+                Optional<Modification> modificationOpt = modifierService.getModification(event);
+                if (modificationOpt.isEmpty()) {
+                    response.put("message", "This event action is not a target.");
+                    break;
+                }
+                Modification modification = modificationOpt.get();
 
                 // To use GitHub's api, get token.
                 token = repository.getAuthToken(event.getInstallation().getId());
@@ -118,14 +124,9 @@ public class TypoFixerController {
                 statusesUrl = event.getPullRequest().getStatusesUrl();
                 repository.updateStatus(statusesUrl, Status.Pending, token.getToken());
 
-                Optional<Modification> modification = modifierService.getModification(event);
-                if (modification.isPresent()) {
-                    boolean isModified = repository.pushFromComment(event, modification.get(), token);
-                    if (isModified) {
-                        response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
-                    }
-                } else {
-                    response.put("message", "Not target format.");
+                boolean isModified = repository.pushFromComment(event, modification, token);
+                if (isModified) {
+                    response.put("message", isModified ? "Pushing modification is succeeded." : "Pushing modification is failed.");
                 }
                 // Update status to success.
                 repository.updateStatus(statusesUrl, Status.Success, token.getToken());

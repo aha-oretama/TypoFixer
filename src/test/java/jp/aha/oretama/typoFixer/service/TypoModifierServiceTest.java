@@ -67,4 +67,16 @@ public class TypoModifierServiceTest {
         assertEquals("print", modification.getCorrect());
     }
 
+    @Test
+    public void otherComment() {
+        // before
+        comment.setBody("This is test before comment is changed.\nSecond line.");
+        // after
+        body.setFrom("This is test after comment is changed.\nSecond Line.\nAdd Third line.");
+
+        Optional<Modification> optModification = service.getModification(event);
+
+        assertTrue(!optModification.isPresent());
+    }
+
 }
