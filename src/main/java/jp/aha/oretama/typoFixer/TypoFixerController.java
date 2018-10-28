@@ -2,6 +2,7 @@ package jp.aha.oretama.typoFixer;
 
 import jp.aha.oretama.typoFixer.model.*;
 import jp.aha.oretama.typoFixer.repository.GitHubRepository;
+import jp.aha.oretama.typoFixer.service.CommentCleanService;
 import jp.aha.oretama.typoFixer.service.FilterService;
 import jp.aha.oretama.typoFixer.service.TypoCheckerService;
 import jp.aha.oretama.typoFixer.service.TypoModifierService;
@@ -25,6 +26,7 @@ public class TypoFixerController {
     private final TypoModifierService modifierService;
     private final FilterService filterService;
     private final GitHubRepository repository;
+    private final CommentCleanService cleanService;
 
     private static final String PULL_REQUEST_EVENT_TYPE = "pull_request";
     private static final String COMMENT_EVENT_TYPE = "pull_request_review_comment";
@@ -90,6 +92,9 @@ public class TypoFixerController {
                 List<String> dictionary = checkerService.getRepositoryDictionary(event, token);
                 checkerService.setDictionary(dictionary);
                 List<Suggestion> suggestions = checkerService.getSuggestions(added);
+
+                // Remove suggestions which previous comments exist.
+                suggestions = cleanService.filterByPreviousComments(suggestions, event.getPullRequest().getReviewCommentsUrl(), token.getToken());
 
                 // Create comments of pull request.
                 boolean isCreated = repository.postComment(event, suggestions, token);

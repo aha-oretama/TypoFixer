@@ -1,7 +1,9 @@
 package jp.aha.oretama.typoFixer.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoFixer.configuration.TestRestTemplateConfiguration;
+import jp.aha.oretama.typoFixer.model.Comment;
 import jp.aha.oretama.typoFixer.model.Status;
 import jp.aha.oretama.typoFixer.model.Token;
 import org.junit.Test;
@@ -17,6 +19,8 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -145,5 +149,36 @@ public class GitHubRepositoryTest {
 
         boolean result = this.repository.updateStatus(url, Status.Pending, token);
         assertTrue(result);
+    }
+
+    @Test
+    public void getComments() throws JsonProcessingException {
+        // Input
+        String token = "1234567890";
+        String url = "https://api.github.com/repos/Codertocat/Hello-World/pulls/1/comments";
+
+        // Output
+        Comment comment = new Comment();
+        comment.setPath("README.md");
+        comment.setPosition(3);
+        comment.setBody("This is test");
+        List<Comment> comments = Collections.singletonList(comment);
+        String response = mapper.writeValueAsString(comments);
+
+        // Mock
+        this.server
+                .expect(requestTo(url))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "token 1234567890"))
+                .andExpect(header("Accept", "application/vnd.github.v3.raw+json"))
+                .andRespond(withSuccess(response, MediaType.APPLICATION_JSON));
+
+        List<Comment> result = this.repository.getComments(url, token);
+
+        assertEquals(1, result.size());
+        Comment resultComment = result.get(0);
+        assertEquals("README.md", resultComment.getPath());
+        assertEquals(3, resultComment.getPosition().intValue());
+        assertEquals("This is test", resultComment.getBody());
     }
 }

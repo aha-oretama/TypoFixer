@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.HttpClientErrorException;
@@ -247,5 +248,17 @@ public class GitHubRepository {
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
         return responseEntity.getStatusCode() == HttpStatus.CREATED;
+    }
+
+    public List<Comment> getComments(String url, String token) {
+        RequestEntity requestEntity = RequestEntity
+                .get(URI.create(url))
+                .header("Authorization", "token " + token)
+                .header("Accept", "application/vnd.github.v3.raw+json")
+                .build();
+
+        ResponseEntity<List<Comment>> responseEntity = restTemplate.exchange(requestEntity, new ParameterizedTypeReference<List<Comment>>() {
+        });
+        return responseEntity.getBody();
     }
 }
