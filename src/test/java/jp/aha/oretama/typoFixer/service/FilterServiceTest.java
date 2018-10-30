@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.aha.oretama.typoFixer.service.filter.ExtensionFilter;
 import jp.aha.oretama.typoFixer.service.filter.Filter;
 import jp.aha.oretama.typoFixer.service.filter.ParseFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author aha-oretama

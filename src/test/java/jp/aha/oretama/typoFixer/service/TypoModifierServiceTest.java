@@ -2,12 +2,12 @@ package jp.aha.oretama.typoFixer.service;
 
 import jp.aha.oretama.typoFixer.model.Event;
 import jp.aha.oretama.typoFixer.model.Modification;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author aha-oretama
@@ -20,7 +20,7 @@ public class TypoModifierServiceTest {
 
     TypoModifierService service = new TypoModifierService();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         event = new Event();
 

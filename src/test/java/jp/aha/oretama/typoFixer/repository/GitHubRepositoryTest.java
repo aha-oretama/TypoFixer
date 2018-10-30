@@ -6,14 +6,12 @@ import jp.aha.oretama.typoFixer.configuration.TestRestTemplateConfiguration;
 import jp.aha.oretama.typoFixer.model.Comment;
 import jp.aha.oretama.typoFixer.model.Status;
 import jp.aha.oretama.typoFixer.model.Token;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 import java.io.IOException;
@@ -23,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
@@ -31,7 +29,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 /**
  * @author aha-oretama
  */
-@RunWith(SpringRunner.class)
 @RestClientTest({GitHubRepository.class, TestRestTemplateConfiguration.class})
 public class GitHubRepositoryTest {
 

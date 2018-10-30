@@ -121,7 +121,7 @@ public class TypoCheckerService {
                 String text = line.getLineContent();
                 List<RuleMatch> matches = jLanguageTool.check(text);
                 for (RuleMatch match : matches) {
-                    suggestions.add(new Suggestion(diff.getPath(), text, line.getFileLine(), line.getDiffLine(), match));
+                    suggestions.add(new Suggestion(diff.getPath(), text, line.getFileLine(), line.getDiffLine(), match.getFromPos(), match.getToPos(), match.getSuggestedReplacements()));
                 }
             }
         }

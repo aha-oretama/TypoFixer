@@ -12,15 +12,13 @@ import jp.aha.oretama.typoFixer.repository.GitHubRepository;
 import jp.aha.oretama.typoFixer.service.TypoCheckerService;
 import jp.aha.oretama.typoFixer.service.TypoModifierService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
@@ -34,10 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author aha-oretama
  */
-@RunWith(SpringRunner.class)
 @WebMvcTest(TypoFixerController.class)
 @Slf4j
-@Ignore("This controller will be changed much.")
+@Disabled("This controller will be changed much.")
 public class TypoFixerControllerTest {
 
     @Autowired
@@ -90,7 +87,7 @@ public class TypoFixerControllerTest {
         return event;
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // Input
         event = createEvent();
@@ -105,7 +102,7 @@ public class TypoFixerControllerTest {
         doReturn(Optional.of(content)).when(template).getRawContent(contentsUrl, path, ref, tokenKey);
         doReturn(parser).when(factory).create(path, content);
 
-        suggestions.add(new Suggestion(path, "this is sentence", 99, 99, null));
+        suggestions.add(new Suggestion(path, "this is sentence", 99, 99, 1, 1, new ArrayList<>()));
         doReturn(suggestions).when(checkerService).getSuggestions(added);
         doReturn(true).when(template).postComment(event, suggestions, token);
     }

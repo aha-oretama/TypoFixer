@@ -1,20 +1,17 @@
 package jp.aha.oretama.typoFixer.service;
 
 import jp.aha.oretama.typoFixer.model.Diff;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author aha-oretama
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class TypoCheckerServiceTest {
 
     private TypoCheckerService service = new TypoCheckerService(new JLanguageTool(new AmericanEnglish()), null);

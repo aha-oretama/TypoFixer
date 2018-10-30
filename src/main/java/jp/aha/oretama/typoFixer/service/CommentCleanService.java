@@ -18,12 +18,14 @@ public class CommentCleanService {
 
     private final GitHubRepository repository;
 
+    public static final String BOT_USER = "typofixer[bot]";
+
     public List<Suggestion> filterByPreviousComments(List<Suggestion> suggestions, String commentsUrl, String token) {
         List<Comment> comments = repository.getComments(commentsUrl, token);
 
         return suggestions.stream().filter(suggestion ->
-                comments.stream().noneMatch(comment ->
-                        suggestion.getPath().equals(comment.getPath())
+                comments.stream().filter(comment -> comment.getUser().getLogin().equals(BOT_USER))
+                        .noneMatch(comment -> suggestion.getPath().equals(comment.getPath())
                                 && suggestion.getDiffLine().equals(comment.getPosition())
                                 && suggestion.createMessage().equals(comment.getBody())))
                 .collect(Collectors.toList());

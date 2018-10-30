@@ -1,8 +1,8 @@
 package jp.aha.oretama.typoFixer.parser;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 /**
  * @author aha-oretama
  */
-@Ignore("TODO, Not implement")
+@Disabled("TODO, Not implement")
 public class JavaParserTest {
 
     @Test

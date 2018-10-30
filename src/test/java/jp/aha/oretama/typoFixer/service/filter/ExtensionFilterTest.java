@@ -1,15 +1,15 @@
 package jp.aha.oretama.typoFixer.service.filter;
 
 import jp.aha.oretama.typoFixer.model.Diff;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author aha-oretama
@@ -18,7 +18,7 @@ public class ExtensionFilterTest {
 
     List<Diff> diffs = new ArrayList<>();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         diffs.add(new Diff("src/test/java/jp/aha/oretama/typoFixer/service/filter/ExtensionFilterTest.java", null));
         diffs.add(new Diff("README.md", null));
